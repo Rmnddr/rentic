@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Rentic Design Tokens — Direction 3 "Soft Rounded" */
+
+    /* Primary — Indigo */
+    --primary: 231 78% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary */
+    --secondary: 231 78% 96%;
+    --secondary-foreground: 231 30% 30%;
+
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Accent — Amber */
+    --accent: 38 92% 63%;
+    --accent-foreground: 38 92% 20%;
+
+    /* Surfaces */
+    --background: 250 100% 99%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    /* Sémantiques */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 48 96% 47%;
+    --warning-foreground: 48 96% 10%;
+
+    /* Borders & Inputs */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 231 78% 65%;
+
+    /* Charts */
+    --chart-1: 231 78% 65%;
+    --chart-2: 38 92% 63%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 4%;
+    --sidebar-active: 233 100% 96%;
+
+    /* Border Radius — Direction 3 Soft Rounded */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius: 1rem;
+
+    /* Shadows — Direction 3 */
+    --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Tabular nums utility for numeric data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
