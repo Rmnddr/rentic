@@ -1,6 +1,5 @@
 import { Sidebar } from "@/features/dashboard/components/sidebar";
 import { createClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -28,11 +27,8 @@ export default async function DashboardLayout({
     .single();
 
   // Redirect to onboarding if not completed
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") ?? headersList.get("x-invoke-path") ?? "";
-  const isOnboardingPage = pathname.includes("/onboarding");
-
-  if (shop && !shop.onboarding_completed && !isOnboardingPage) {
+  // Onboarding page is now OUTSIDE this route group, so no loop
+  if (shop && !shop.onboarding_completed) {
     redirect("/onboarding");
   }
 
