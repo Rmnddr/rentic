@@ -63,7 +63,7 @@ export async function createPackAction(
 
   if (itemsError) return { success: false, error: itemsError.message };
 
-  revalidatePath("/(dashboard)/packs");
+  revalidatePath("/packs");
   return { success: true, data: { id: pack.id } };
 }
 
@@ -119,7 +119,7 @@ export async function updatePackAction(
 
   if (itemsError) return { success: false, error: itemsError.message };
 
-  revalidatePath("/(dashboard)/packs");
+  revalidatePath("/packs");
   return { success: true, data: null };
 }
 
@@ -133,6 +133,6 @@ export async function deletePackAction(
   const { error } = await supabase.from("packs").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/(dashboard)/packs");
+  revalidatePath("/packs");
   return { success: true, data: null };
 }

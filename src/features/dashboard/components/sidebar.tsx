@@ -36,14 +36,14 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/(dashboard)", icon: LayoutDashboard },
-  { label: "Réservations", href: "/(dashboard)/reservations", icon: CalendarDays },
-  { label: "Catalogue", href: "/(dashboard)/catalog", icon: Package },
-  { label: "Packs", href: "/(dashboard)/packs", icon: Layers },
-  { label: "Site Web", href: "/(dashboard)/website", icon: Globe, ownerOnly: true },
-  { label: "Abonnement", href: "/(dashboard)/subscription", icon: CreditCard, ownerOnly: true },
-  { label: "Équipe", href: "/(dashboard)/team", icon: Users, ownerOnly: true },
-  { label: "Paramètres", href: "/(dashboard)/settings", icon: Settings, ownerOnly: true },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Réservations", href: "/reservations", icon: CalendarDays },
+  { label: "Catalogue", href: "/catalog", icon: Package },
+  { label: "Packs", href: "/packs", icon: Layers },
+  { label: "Site Web", href: "/website", icon: Globe, ownerOnly: true },
+  { label: "Abonnement", href: "/subscription", icon: CreditCard, ownerOnly: true },
+  { label: "Équipe", href: "/team", icon: Users, ownerOnly: true },
+  { label: "Paramètres", href: "/settings", icon: Settings, ownerOnly: true },
 ];
 
 type SidebarProps = {
@@ -119,7 +119,7 @@ function SidebarContent({ shopName, userName, userRole, onNavigate }: SidebarPro
           <NavLink
             key={item.href}
             item={item}
-            isActive={pathname === item.href || (item.href !== "/(dashboard)" && pathname.startsWith(item.href))}
+            isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
             onClick={onNavigate}
           />
         ))}

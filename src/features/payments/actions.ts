@@ -50,8 +50,8 @@ export async function createStripeConnectAction(): Promise<ActionResult<{ url: s
   // Create onboarding link
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/(dashboard)/settings?stripe=refresh`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/(dashboard)/settings?stripe=success`,
+    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?stripe=refresh`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?stripe=success`,
     type: "account_onboarding",
   });
 
@@ -133,6 +133,6 @@ export async function recordCashPaymentAction(
     method: "cash",
   });
 
-  revalidatePath("/(dashboard)/reservations");
+  revalidatePath("/reservations");
   return { success: true, data: null };
 }

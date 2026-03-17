@@ -25,7 +25,7 @@ export async function createCategoryAction(
     .single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: { id: data.id } };
 }
 
@@ -45,7 +45,7 @@ export async function updateCategoryAction(
     .eq("id", id);
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -72,7 +72,7 @@ export async function deleteCategoryAction(
 
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -102,7 +102,7 @@ export async function createAttributeAction(
     .single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: { id: data.id } };
 }
 
@@ -129,7 +129,7 @@ export async function deleteAttributeAction(
 
   const { error } = await supabase.from("category_attributes").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -166,7 +166,7 @@ export async function createProductAction(
     .single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: { id: data.id } };
 }
 
@@ -189,7 +189,7 @@ export async function updateProductAction(
     .eq("id", id);
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -202,7 +202,7 @@ export async function deleteProductAction(
   const supabase = await createClient();
   const { error } = await supabase.from("products").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -224,7 +224,7 @@ export async function createUnitAction(
     .single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: { id: data.id } };
 }
 
@@ -244,7 +244,7 @@ export async function updateUnitAction(
     .eq("id", id);
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -257,7 +257,7 @@ export async function deleteUnitAction(
   const supabase = await createClient();
   const { error } = await supabase.from("product_units").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }
 
@@ -280,7 +280,7 @@ export async function createBrandAction(
     .single();
 
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: { id: data.id } };
 }
 
@@ -306,6 +306,6 @@ export async function deleteBrandAction(
 
   const { error } = await supabase.from("brands").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
-  revalidatePath("/(dashboard)/catalog");
+  revalidatePath("/catalog");
   return { success: true, data: null };
 }

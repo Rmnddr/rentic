@@ -116,7 +116,7 @@ export async function createReservationAction(
     }
   }
 
-  revalidatePath("/(dashboard)/reservations");
+  revalidatePath("/reservations");
   return { success: true, data: { id: reservation.id } };
 }
 
@@ -166,6 +166,6 @@ export async function updateReservationStatusAction(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/(dashboard)/reservations");
+  revalidatePath("/reservations");
   return { success: true, data: null };
 }

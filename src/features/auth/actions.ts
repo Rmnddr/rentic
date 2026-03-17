@@ -67,11 +67,11 @@ export async function signInAction(
     return { success: false, error: "Email ou mot de passe incorrect." };
   }
 
-  redirect("/(dashboard)");
+  redirect("/dashboard");
 }
 
 export async function signOutAction(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/(auth)/login");
+  redirect("/login");
 }

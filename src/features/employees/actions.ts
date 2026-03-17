@@ -36,7 +36,7 @@ export async function inviteEmployeeAction(
 
   // TODO: Send invitation email via Resend (Epic 6.5)
 
-  revalidatePath("/(dashboard)/team");
+  revalidatePath("/team");
   return { success: true, data: { token: data.token } };
 }
 
@@ -57,6 +57,6 @@ export async function toggleEmployeeStatusAction(
 
   // Toggle: check current role, if employee → set to 'owner' is wrong
   // For now, we don't have an is_active column — placeholder for future migration
-  revalidatePath("/(dashboard)/team");
+  revalidatePath("/team");
   return { success: true, data: null };
 }

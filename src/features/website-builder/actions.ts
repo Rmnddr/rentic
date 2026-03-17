@@ -52,7 +52,7 @@ export async function updateWebsiteAction(
     revalidatePath(`/s/${shop.slug}`);
   }
 
-  revalidatePath("/(dashboard)/website");
+  revalidatePath("/website");
   return { success: true, data: null };
 }
 
@@ -74,6 +74,6 @@ export async function updateCgvAction(
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/(dashboard)/website");
+  revalidatePath("/website");
   return { success: true, data: null };
 }

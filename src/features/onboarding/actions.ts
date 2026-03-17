@@ -113,5 +113,5 @@ export async function createFirstCategoryAction(
     .update({ onboarding_completed: true })
     .eq("id", profile.shop_id);
 
-  redirect("/(dashboard)");
+  redirect("/dashboard");
 }

@@ -48,8 +48,8 @@ export async function createCheckoutSessionAction(
     customer: customerId,
     mode: "subscription",
     line_items: [{ price: planConfig.priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/(dashboard)/subscription?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/(dashboard)/subscription?canceled=true`,
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
     metadata: { shop_id: shopId, plan },
   });
 
@@ -73,7 +73,7 @@ export async function createCustomerPortalAction(): Promise<ActionResult<{ url: 
 
   const session = await stripe.billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/(dashboard)/subscription`,
+    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription`,
   });
 
   redirect(session.url);
