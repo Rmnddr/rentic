@@ -1,14 +1,13 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CatalogToolbar } from "@/features/catalog/components/catalog-toolbar";
 import { createClient } from "@/lib/supabase/server";
 import { Package } from "lucide-react";
-import Link from "next/link";
 
 export default async function CatalogPage() {
   const supabase = await createClient();
@@ -33,18 +32,10 @@ export default async function CatalogPage() {
             Gérez vos catégories, produits et marques
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/catalog/brands">
-            <Button variant="outline" size="sm">
-              Marques
-              {brands && brands.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 tabular-nums">
-                  {brands.length}
-                </Badge>
-              )}
-            </Button>
-          </Link>
-        </div>
+        <CatalogToolbar
+          categories={(categories ?? []).map((c) => ({ id: c.id, name: c.name }))}
+          brands={brands ?? []}
+        />
       </header>
 
       {/* Categories */}

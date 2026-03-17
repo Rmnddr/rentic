@@ -4,6 +4,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateReservationDialog } from "@/features/reservations/components/create-reservation-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarDays } from "lucide-react";
 
@@ -102,11 +103,14 @@ export default async function ReservationsPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-h1">Réservations</h1>
-        <p className="mt-1 text-body-sm text-muted-foreground">
-          Consultez et gérez vos réservations
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-h1">Réservations</h1>
+          <p className="mt-1 text-body-sm text-muted-foreground">
+            Consultez et gérez vos réservations
+          </p>
+        </div>
+        <CreateReservationDialog />
       </header>
 
       <Tabs defaultValue="upcoming">
