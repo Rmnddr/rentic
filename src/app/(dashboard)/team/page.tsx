@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { InviteEmployeeDialog } from "@/features/employees/components/invite-employee-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { Users } from "lucide-react";
 
@@ -25,11 +26,14 @@ export default async function TeamPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-h1">Équipe</h1>
-        <p className="mt-1 text-body-sm text-muted-foreground">
-          Gérez les membres de votre équipe
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-h1">Équipe</h1>
+          <p className="mt-1 text-body-sm text-muted-foreground">
+            Gérez les membres de votre équipe
+          </p>
+        </div>
+        <InviteEmployeeDialog />
       </header>
 
       {/* Members */}

@@ -1,11 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { WebsiteEditor } from "@/features/website-builder/components/website-editor";
 import { createClient } from "@/lib/supabase/server";
 import { Globe } from "lucide-react";
 
@@ -15,7 +9,7 @@ export default async function WebsitePage() {
 
   const { data: website } = await supabase
     .from("shop_websites")
-    .select("*")
+    .select("hero_title, hero_subtitle, hero_image_url, cgv_content, is_published")
     .eq("shop_id", shopId ?? "")
     .single();
 
@@ -34,7 +28,7 @@ export default async function WebsitePage() {
             Configurez votre vitrine en ligne
           </p>
         </div>
-        {website?.is_published && shop?.slug && (
+        {website?.is_published && (
           <Badge variant="default" className="gap-1.5">
             <Globe className="h-3 w-3" />
             Publié
@@ -42,51 +36,7 @@ export default async function WebsitePage() {
         )}
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-h3">Landing page</CardTitle>
-          <CardDescription>
-            Personnalisez le hero, les sections et les informations affichées
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {website ? (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-secondary/50 p-4">
-                <p className="text-body-sm text-muted-foreground">Titre hero</p>
-                <p className="mt-1 font-medium">
-                  {website.hero_title || "Non défini"}
-                </p>
-              </div>
-              <div className="rounded-lg bg-secondary/50 p-4">
-                <p className="text-body-sm text-muted-foreground">Sous-titre</p>
-                <p className="mt-1 font-medium">
-                  {website.hero_subtitle || "Non défini"}
-                </p>
-              </div>
-              {shop?.slug && (
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <p className="text-body-sm text-muted-foreground">
-                    URL publique
-                  </p>
-                  <p className="mt-1 font-medium text-primary">
-                    {process.env.NEXT_PUBLIC_APP_URL}/s/{shop.slug}
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <Globe className="h-7 w-7 text-primary" />
-              </div>
-              <p className="text-body-sm text-muted-foreground">
-                Aucun site configuré — commencez par éditer votre landing page
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <WebsiteEditor website={website} shopSlug={shop?.slug ?? ""} />
     </div>
   );
 }

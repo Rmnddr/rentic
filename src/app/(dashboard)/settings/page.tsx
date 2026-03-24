@@ -7,12 +7,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { EditShopForm } from "@/features/dashboard/components/edit-shop-form";
 import { createClient } from "@/lib/supabase/server";
-;
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -42,37 +44,26 @@ export default async function SettingsPage() {
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Shop info */}
+        {/* Shop info — editable */}
         <Card>
           <CardHeader>
             <CardTitle className="text-h3">Magasin</CardTitle>
-            <CardDescription>Informations publiques de votre boutique</CardDescription>
+            <CardDescription>
+              Informations publiques de votre boutique
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {[
-              { label: "Nom", value: shop?.name },
-              { label: "Slug", value: shop?.slug },
-              { label: "Email", value: shop?.email },
-              { label: "Téléphone", value: shop?.phone },
-              { label: "Adresse", value: shop?.address },
-              { label: "SIRET", value: shop?.siret },
-              { label: "N° TVA", value: shop?.tva_number },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="text-body-sm text-muted-foreground">{label}</span>
-                <span className="text-sm font-medium">
-                  {value || <span className="text-muted-foreground">—</span>}
-                </span>
-              </div>
-            ))}
+          <CardContent>
+            {shop && (
+              <EditShopForm shop={shop} shopId={profile?.shop_id ?? ""} />
+            )}
           </CardContent>
         </Card>
 
-        {/* Profile info */}
+        {/* Profile + Stripe info */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-h3">Profil</CardTitle>
-            <CardDescription>Vos informations personnelles</CardDescription>
+            <CardTitle className="text-h3">Compte</CardTitle>
+            <CardDescription>Vos informations</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">

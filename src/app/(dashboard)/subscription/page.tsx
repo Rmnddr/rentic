@@ -6,6 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  ManageBillingButton,
+  SubscribeButton,
+} from "@/features/subscriptions/components/subscribe-buttons";
 import { createClient } from "@/lib/supabase/server";
 import { CreditCard } from "lucide-react";
 
@@ -95,6 +99,11 @@ export default async function SubscriptionPage() {
                   </span>
                 </div>
               )}
+              {subscription.status === "active" && (
+                <div className="pt-2">
+                  <ManageBillingButton />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -109,7 +118,7 @@ export default async function SubscriptionPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border bg-card p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold">Saison</p>
@@ -119,8 +128,9 @@ export default async function SubscriptionPage() {
                     </div>
                     <p className="text-h2 tabular-nums text-primary">450 €</p>
                   </div>
+                  <SubscribeButton plan="season" label="Souscrire Saison" />
                 </div>
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border bg-card p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold">Annuel</p>
@@ -130,6 +140,7 @@ export default async function SubscriptionPage() {
                     </div>
                     <p className="text-h2 tabular-nums text-primary">790 €</p>
                   </div>
+                  <SubscribeButton plan="annual" label="Souscrire Annuel" />
                 </div>
               </CardContent>
             </Card>
