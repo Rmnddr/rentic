@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
+import { buttonVariants } from "@/components/ui/button";
 
 type Props = { params: Promise<{ shopSlug: string }> };
 
@@ -70,6 +72,14 @@ export default async function ShopPage({ params }: Props) {
           <p className="max-w-2xl text-lg text-muted-foreground">
             {website.hero_subtitle}
           </p>
+        )}
+        {website && (
+          <Link
+            href={`/s/${shop.slug}/reserver`}
+            className={buttonVariants({ size: "lg" })}
+          >
+            Réserver en ligne
+          </Link>
         )}
       </section>
 

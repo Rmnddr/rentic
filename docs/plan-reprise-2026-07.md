@@ -61,17 +61,18 @@ Mise en conformité des fondations avant toute nouvelle feature :
 Corrections de bugs au passage : erreur d'update du téléphone magasin ignorée, JSON non-tableau pouvant corrompre `shop_websites.sections`, portail Stripe sans check d'auth, erreurs d'insert paiements avalées.
 À retenir pour la Phase 2 : `createPaymentIntentAction` exige désormais l'auth — le tunnel public aura besoin d'une variante anonyme sécurisée.
 
-## Phase 2 — Tunnel de réservation public (3 à 5 jours) ⭐ priorité produit
+## Phase 2 — Tunnel de réservation public ✅ FAIT le 21/07/2026 (hors paiement CB)
 
-C'est LA feature qui sépare "démo dashboard" de "produit vendable". Stories 5.5 → 5.7 + 6.2. En TDD strict (TEST RED d'abord).
+- [x] `/s/[shopSlug]/reserver` : 4 étapes — dates (calendrier range FR) → matériel dispo via `check_availability` → participants EAV → récap/CGV/confirmation
+- [x] Panier Zustand : produits + packs (items obligatoires/optionnels, prix overridés)
+- [x] Formulaire participants : attributs EAV dynamiques par catégorie (text/number/select)
+- [x] RLS : découverte majeure — AUCUNE table n'était lisible publiquement (le site vitrine n'a jamais marché pour un anonyme). Migration `20260721000001` : policies de lecture publique conditionnées à `is_published`, et écriture via fonction `create_web_reservation` SECURITY DEFINER.
+- [x] Transaction atomique : fonction Postgres unique — prix recalculés SERVEUR (le client n'envoie jamais de prix ; l'ancienne action faisait confiance au unitPrice client !), unités verrouillées FOR UPDATE, rollback complet vérifié en cas de stock insuffisant.
+- [x] Vérifié en réel dans le navigateur : 2 réservations créées (pack avec option + produit seul), stock décrémenté sur dates chevauchantes, surbooking refusé, prix client ignoré.
+- [ ] Paiement CB client final → reporté Phase 3 (nécessite les clés Stripe ; le tunnel affiche "paiement sur place au retrait")
+- [ ] Test e2e Playwright automatisé du parcours (vérifié manuellement pour l'instant)
 
-- [ ] `/s/[shopSlug]/reserver` : sélection dates → produits/packs disponibles sur la période (via `check_availability`)
-- [ ] Panier (state client, Zustand conforme stack NCF) : produits + packs avec items optionnels
-- [ ] Formulaire participants : attributs EAV dynamiques par catégorie
-- [ ] **Point de vigilance RLS** : `createWebReservationAction` utilise le client anonyme — vérifier/écrire les policies d'insert public (ou passer par le client admin service-role dans la server action). Jamais testé faute d'UI.
-- [ ] Paiement CB client final : brancher `createPaymentIntentAction` (Stripe Connect, `on_behalf_of` du shop) + page de confirmation
-- [ ] Transaction : la création résa + items + assignation d'unités doit être atomique (actuellement boucle d'inserts sans rollback — passer par une fonction Postgres `create_reservation` transactionnelle)
-- [ ] Test e2e Playwright du parcours complet (dates → panier → participants → paiement test → confirmation)
+Boutique de démo en base : `glisse-test` (Glisse Pyrénées, 3 produits, 1 pack, attributs Pointure/Niveau).
 
 ## Phase 3 — Paiements, factures, emails (2 à 3 jours)
 
