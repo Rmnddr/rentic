@@ -69,7 +69,9 @@ export function OnboardingWizard({ currentStep, profile, shop }: Props) {
   return (
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
-        <CardTitle className="text-h1">Bienvenue sur Rentic</CardTitle>
+        <CardTitle asChild className="text-h1">
+          <h1>Bienvenue sur Rentic</h1>
+        </CardTitle>
         <CardDescription>
           Configurons votre magasin en 3 étapes
         </CardDescription>

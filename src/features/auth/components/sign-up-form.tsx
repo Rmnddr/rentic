@@ -67,7 +67,9 @@ export function SignUpForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-h2">Créer un compte</CardTitle>
+        <CardTitle asChild className="text-h2">
+          <h1>Créer un compte</h1>
+        </CardTitle>
         <CardDescription>
           Inscrivez-vous pour gérer votre magasin de location
         </CardDescription>

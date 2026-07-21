@@ -37,7 +37,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-h2">Connexion</CardTitle>
+        <CardTitle asChild className="text-h2">
+          <h1>Connexion</h1>
+        </CardTitle>
         <CardDescription>
           Accédez à votre espace de gestion
         </CardDescription>
