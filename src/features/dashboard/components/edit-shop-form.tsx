@@ -30,6 +30,10 @@ export function EditShopForm({ shop, shopId }: Props) {
     setMessage(null);
 
     const formData = new FormData(e.currentTarget);
+    const getField = (name: string): string => {
+      const value = formData.get(name);
+      return typeof value === "string" ? value : "";
+    };
 
     // Use inline server action import to avoid circular deps
     const { createClient } = await import("@/lib/supabase/client");
@@ -38,12 +42,12 @@ export function EditShopForm({ shop, shopId }: Props) {
     const { error } = await supabase
       .from("shops")
       .update({
-        name: formData.get("name") as string,
-        email: formData.get("email") as string || null,
-        phone: formData.get("phone") as string || null,
-        address: formData.get("address") as string || null,
-        siret: formData.get("siret") as string || null,
-        tva_number: formData.get("tvaNumber") as string || null,
+        name: getField("name"),
+        email: getField("email") || null,
+        phone: getField("phone") || null,
+        address: getField("address") || null,
+        siret: getField("siret") || null,
+        tva_number: getField("tvaNumber") || null,
       })
       .eq("id", shopId);
 

@@ -32,9 +32,14 @@ export function CreateProductDialog({ categories, brands }: Props) {
     setError(null);
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
+    const getPriceInCents = (name: string): number => {
+      const value = formData.get(name);
+      const parsed = typeof value === "string" ? parseFloat(value) : NaN;
+      return Math.round((Number.isNaN(parsed) ? 0 : parsed) * 100);
+    };
     // Convert prices to cents
-    const priceWeb = Math.round(parseFloat(formData.get("priceWebEur") as string || "0") * 100);
-    const priceShop = Math.round(parseFloat(formData.get("priceShopEur") as string || "0") * 100);
+    const priceWeb = getPriceInCents("priceWebEur");
+    const priceShop = getPriceInCents("priceShopEur");
     formData.set("priceWeb", priceWeb.toString());
     formData.set("priceShop", priceShop.toString());
 

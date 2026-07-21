@@ -42,7 +42,7 @@ export default async function DashboardLayout({
       <Sidebar
         shopName={shop?.name ?? "Mon magasin"}
         userName={userName}
-        userRole={(profile?.role as "owner" | "employee") ?? "owner"}
+        userRole={profile?.role === "employee" ? "employee" : "owner"}
       />
 
       <main className="min-h-screen pt-16 lg:pl-64 lg:pt-0">

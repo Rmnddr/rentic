@@ -15,7 +15,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme === "light" || theme === "dark" ? theme : "system"}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
@@ -30,6 +30,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
+          // EXCEPTION-TYPECAST: les variables CSS personnalisées (--normal-bg…) ne font pas partie du type React.CSSProperties
         } as React.CSSProperties
       }
       {...props}

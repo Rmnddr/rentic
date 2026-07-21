@@ -30,8 +30,11 @@ export function SignUpForm() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    const passwordValue = formData.get("password");
+    const confirmPasswordValue = formData.get("confirmPassword");
+    const password = typeof passwordValue === "string" ? passwordValue : "";
+    const confirmPassword =
+      typeof confirmPasswordValue === "string" ? confirmPasswordValue : "";
 
     if (password.length < 8) {
       setFieldErrors({

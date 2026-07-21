@@ -26,6 +26,7 @@ type FormFieldContextValue<
 }
 
 const FormFieldContext = React.createContext<FormFieldContextValue>(
+  // EXCEPTION-TYPECAST: pattern shadcn/ui — la valeur par défaut n'est jamais lue hors Provider (garde dans useFormField)
   {} as FormFieldContextValue
 )
 
@@ -70,6 +71,7 @@ type FormItemContextValue = {
 }
 
 const FormItemContext = React.createContext<FormItemContextValue>(
+  // EXCEPTION-TYPECAST: pattern shadcn/ui — la valeur par défaut n'est jamais lue hors Provider (toujours sous FormItem)
   {} as FormItemContextValue
 )
 

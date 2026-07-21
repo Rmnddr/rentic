@@ -33,13 +33,13 @@ Le `sprint-status.yaml` marquait les 9 épics "done" — faux. État réel :
 - [ ] Créer `CLAUDE.local.md` depuis `~/Dev/_templates/nextjs/CLAUDE.local.md` (stack addons : Supabase, Stripe, Resend, Sentry)
 - [ ] Supprimer `conv` (pointeur de session obsolète) et `tsconfig.tsbuildinfo` du repo
 
-## Phase 1 — Socle NCF (1 à 1,5 jour)
+## Phase 1 — Socle NCF ✅ FAIT le 21/07/2026
 
 Mise en conformité des fondations avant toute nouvelle feature :
 
-- [ ] `src/lib/env.ts` : validation Zod de toutes les variables d'env au démarrage
-- [ ] Helper `requireAuth()` (+ variante `requireShop()`) dans `src/lib/supabase/`
-- [ ] Passe sur les **10 fichiers d'actions / 34 actions** : `requireAuth()` ligne 1 + schéma Zod par action (ordre NCF : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION)
+- [x] `src/lib/env.ts` : validation Zod de toutes les variables d'env au démarrage (+ `requireEnv()` pour les optionnelles Stripe/Resend, client Stripe lazy via `getStripe()`)
+- [x] Helper `requireAuth()` (+ variante `requireShop()`) dans `src/lib/supabase/auth.ts`
+- [x] Passe sur les **10 fichiers d'actions / 34 actions** : `requireAuth()` ligne 1 + schéma Zod par action (ordre NCF : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION). Schémas partagés dans `src/lib/schemas/` alignés sur les CHECK constraints des migrations. Exceptions documentées : actions auth et tunnel publiques par design.
 
 | Fichier | Actions | Effort |
 |---------|---------|--------|
@@ -54,9 +54,12 @@ Mise en conformité des fondations avant toute nouvelle feature :
 | `auth/actions.ts` (77 l.) | 3 | ~30 min |
 | `employees/actions.ts` (62 l.) | 2 | ~30 min |
 
-- [ ] `loading.tsx` + `error.tsx` sur chaque route avec fetch async (dashboard, catalog, packs, reservations, s/[shopSlug]…)
-- [ ] Purge des casts `as` non commentés (`// EXCEPTION-TYPECAST:` sinon)
-- [ ] Premiers tests vitest sur les actions critiques (catalog, reservations, tunnel) — pose le harnais TDD pour la suite
+- [x] `loading.tsx` + `error.tsx` sur chaque route avec fetch async (10 loading + 3 error, skeletons calés sur les vraies pages)
+- [x] Purge des casts `as` non commentés (11 éliminés, 3 + webhooks annotés `// EXCEPTION-TYPECAST:`)
+- [x] Premiers tests vitest : **85 tests** (contrats de schémas + comportement des actions catalog/tunnel). Note : `jsdom` manquait des devDeps — vitest n'avait jamais pu tourner.
+
+Corrections de bugs au passage : erreur d'update du téléphone magasin ignorée, JSON non-tableau pouvant corrompre `shop_websites.sections`, portail Stripe sans check d'auth, erreurs d'insert paiements avalées.
+À retenir pour la Phase 2 : `createPaymentIntentAction` exige désormais l'auth — le tunnel public aura besoin d'une variante anonyme sécurisée.
 
 ## Phase 2 — Tunnel de réservation public (3 à 5 jours) ⭐ priorité produit
 
