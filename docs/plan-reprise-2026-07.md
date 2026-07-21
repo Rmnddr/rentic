@@ -74,13 +74,21 @@ Corrections de bugs au passage : erreur d'update du téléphone magasin ignorée
 
 Boutique de démo en base : `glisse-test` (Glisse Pyrénées, 3 produits, 1 pack, attributs Pointure/Niveau).
 
-## Phase 3 — Paiements, factures, emails (2 à 3 jours)
+## Phase 3 — Paiements, factures, emails ✅ FAIT le 21/07/2026
 
-- [ ] Brancher l'onboarding Stripe Connect dans l'UI settings (action existante, jamais appelée)
-- [ ] Brancher `recordCashPaymentAction` dans la vue réservation back-office
-- [ ] `src/lib/email/` : intégration Resend — confirmation de résa, facture, invitation employé (lever le TODO de `employees/actions.ts`)
-- [ ] Facture PDF conforme (feature `invoicing/` vide aujourd'hui) — react-pdf ou service externe
-- [ ] Tester la réconciliation webhook Connect en mode test Stripe de bout en bout
+- [x] Carte Stripe Connect dans Settings (3 états : absent / incomplet / actif, retour d'onboarding géré)
+- [x] `recordCashPaymentAction` branchée : dialog "Encaisser en espèces" + badge Payée/En attente dans la liste
+- [x] `src/lib/email/` : Resend avec **no-op sûr** — sans `RESEND_API_KEY`, log + ligne `email_logs` en `skipped`, jamais d'exception. Confirmation de résa (fire-and-forget depuis le tunnel) + invitation employé (TODO levé).
+- [x] Facture PDF conforme France : `FAC-{YYYY}-{NNNN}` séquentiel par shop/année, rendue à la volée par `@react-pdf/renderer` (jamais stockée), mention art. 293 B du CGI si pas de n° TVA
+- [x] Paiement CB dans le tunnel (Payment Element, destination charge vers le compte Connect du loueur)
+- [x] Réconciliation webhook testée de bout en bout en mode test Stripe
+
+**Bugs sérieux corrigés au passage :**
+- Les deux webhooks Stripe tournaient sur le client anonyme → **toutes les mises à jour étaient bloquées par RLS** : la réconciliation des paiements et des abonnements n'a jamais fonctionné.
+- `webhook_events` n'avait **aucune RLS** : tout porteur de la clé anon pouvait y insérer et casser l'idempotence des webhooks.
+- Le PaymentIntent était recréé à chaque montage du composant (doublons de paiement observés en test) → réutilisation de l'intent `pending` + `idempotencyKey` Stripe + index unique en base.
+
+Compte de démo pour tester : `demo-owner@glisse-test.fr` (mot de passe généré, voir scratchpad de session) sur la boutique `glisse-test`, avec un compte Stripe Connect de test actif.
 
 ## Phase 4 — Admin plateforme & finitions (2 jours)
 
