@@ -118,5 +118,5 @@ Ordre de reprise recommandé : 0 → 1 → 2 (le tunnel est prioritaire ; les ph
 | **Envoi réel des emails** | 🔒 domaine à acquérir | Resend exige un domaine vérifié par DNS. Le code est prêt et inoffensif sans clé (`skipped` en base). Procédure : voir `CLAUDE.local.md`. |
 | Story 8-5 — activation/désactivation d'un employé | — | Le toggle est un placeholder : il manque une colonne `is_active` sur `profiles` (migration + action + UI). |
 | Story 9-4 — journalisation | — | Sentry est câblé, mais pas de logger structuré ni de correlation id (attendu par la skill `ncf-backend`). |
-| `src/types/database.ts` obsolète | — | Ne contient ni `subscriptions`, ni `payments`, ni `platform_admins`, ni les vues. À régénérer depuis Supabase et à brancher sur les clients (typage de bout en bout). |
+| ~~`src/types/database.ts` obsolète~~ | ✅ fait 21/07 | Régénéré (1297 lignes) et branché sur les 4 clients Supabase. A révélé deux vrais écarts : colonnes de vue nullables supposées non-null (plantage possible sur un magasin sans profil propriétaire) et enums `text` non rétrécis. **Penser à régénérer après chaque migration** — procédure dans `CLAUDE.local.md`. |
 | Déploiement | — | Jamais déployé. Vercel + variables d'env ; une URL `*.vercel.app` suffit pour un pilote, le domaine peut venir après. |
