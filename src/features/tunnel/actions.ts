@@ -9,22 +9,47 @@ type TunnelItem = {
   productId: string;
   packId?: string | null;
   quantity: number;
-  unitPrice: number;
-  isOptional: boolean;
+  isOptional?: boolean;
 };
 
 type ParticipantValue = {
+  itemIndex: number;
   attributeId: string;
   value: string;
   participantIndex: number;
 };
 
-// Ordre NCF : VALIDATION → VÉRIFICATION → OPÉRATION.
+// Ordre NCF : VALIDATION → OPÉRATION (la VÉRIFICATION — dispo, prix,
+// appartenance au shop — vit DANS la fonction Postgres, atomiquement).
 //
 // ACTION PUBLIQUE PAR DESIGN : le tunnel de réservation est utilisé par le
-// client final du magasin, qui n'est PAS authentifié. Pas de requireAuth ici —
-// la validation Zod stricte (shopId UUID, bornes sur chaque champ) et les
-// politiques RLS côté base constituent les seules barrières.
+// client final du magasin, qui n'est PAS authentifié. Pas de requireAuth ici.
+// Toute l'écriture passe par create_web_reservation (SECURITY DEFINER) :
+// transaction unique, prix recalculés serveur, unités verrouillées (FOR
+// UPDATE) et trigger anti double-booking en filet final.
+
+const RPC_ERROR_MESSAGES: Record<string, string> = {
+  SHOP_NOT_PUBLIC: "Cette boutique n'accepte pas les réservations en ligne.",
+  INVALID_CUSTOMER: "Informations de contact invalides.",
+  INVALID_DATES: "Les dates sélectionnées sont invalides.",
+  INVALID_ITEMS: "Panier invalide.",
+  INVALID_QUANTITY: "Quantité invalide.",
+  INVALID_PARTICIPANTS: "Informations participants invalides.",
+  PRODUCT_NOT_IN_SHOP: "Un produit du panier n'existe pas dans cette boutique.",
+  ITEM_NOT_IN_PACK: "Un produit du panier ne fait pas partie du pack indiqué.",
+  INSUFFICIENT_STOCK:
+    "Un ou plusieurs produits ne sont plus disponibles sur cette période. Veuillez ajuster votre panier.",
+};
+
+function mapRpcError(message: string): string {
+  for (const [code, friendly] of Object.entries(RPC_ERROR_MESSAGES)) {
+    if (message.includes(code)) return friendly;
+  }
+  if (message.includes("Double booking")) {
+    return RPC_ERROR_MESSAGES.INSUFFICIENT_STOCK;
+  }
+  return "La réservation n'a pas pu être créée. Veuillez réessayer.";
+}
 
 export async function createWebReservationAction(data: {
   shopId: string;
@@ -45,87 +70,40 @@ export async function createWebReservationAction(data: {
 
   const supabase = await createClient();
 
-  // VÉRIFICATION : disponibilité de chaque produit sur la période.
-  for (const item of input.items) {
-    const { data: available } = await supabase.rpc("check_availability", {
-      p_product_id: item.productId,
+  const { data: reservationId, error } = await supabase.rpc(
+    "create_web_reservation",
+    {
+      p_shop_id: input.shopId,
+      p_customer_name: input.customerName,
+      p_customer_email: input.customerEmail,
+      p_customer_phone: input.customerPhone || null,
       p_start_date: input.startDate,
       p_end_date: input.endDate,
-    });
-
-    if ((available ?? 0) < item.quantity) {
-      return {
-        success: false,
-        error: "Un ou plusieurs produits ne sont plus disponibles.",
-      };
-    }
-  }
-
-  const totalPrice = input.items.reduce(
-    (sum, i) => sum + i.unitPrice * i.quantity,
-    0,
-  );
-
-  const { data: reservation, error: resError } = await supabase
-    .from("reservations")
-    .insert({
-      shop_id: input.shopId,
-      customer_name: input.customerName,
-      customer_email: input.customerEmail,
-      customer_phone: input.customerPhone || null,
-      start_date: input.startDate,
-      end_date: input.endDate,
-      source: "web",
-      total_price: totalPrice,
-    })
-    .select("id")
-    .single();
-
-  if (resError) return { success: false, error: resError.message };
-
-  for (const item of input.items) {
-    const { data: resItem, error: itemError } = await supabase
-      .from("reservation_items")
-      .insert({
-        reservation_id: reservation.id,
+      p_items: input.items.map((item) => ({
         product_id: item.productId,
-        pack_id: item.packId || null,
+        pack_id: item.packId ?? null,
         quantity: item.quantity,
-        unit_price: item.unitPrice,
-        is_optional: item.isOptional,
-      })
-      .select("id")
-      .single();
-
-    if (itemError) return { success: false, error: itemError.message };
-
-    // Assignation automatique des unités disponibles.
-    const { data: units } = await supabase
-      .from("product_units")
-      .select("id")
-      .eq("product_id", item.productId)
-      .eq("status", "available")
-      .limit(item.quantity);
-
-    if (units) {
-      for (const unit of units) {
-        await supabase.from("reservation_unit_assignments").insert({
-          reservation_item_id: resItem.id,
-          product_unit_id: unit.id,
-        });
-      }
-    }
-
-    // Valeurs d'attributs des participants (déjà validées par Zod).
-    for (const pv of input.participantValues) {
-      await supabase.from("participant_attribute_values").insert({
-        reservation_item_id: resItem.id,
-        category_attribute_id: pv.attributeId,
+        is_optional: item.isOptional ?? false,
+      })),
+      p_participant_values: input.participantValues.map((pv) => ({
+        item_index: pv.itemIndex,
+        attribute_id: pv.attributeId,
         value: pv.value,
         participant_index: pv.participantIndex,
-      });
-    }
+      })),
+    },
+  );
+
+  if (error) {
+    return { success: false, error: mapRpcError(error.message) };
   }
 
-  return { success: true, data: { reservationId: reservation.id } };
+  if (typeof reservationId !== "string" || reservationId.length === 0) {
+    return {
+      success: false,
+      error: "La réservation n'a pas pu être créée. Veuillez réessayer.",
+    };
+  }
+
+  return { success: true, data: { reservationId } };
 }

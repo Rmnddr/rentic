@@ -4,7 +4,9 @@ import { createWebReservationSchema } from "./tunnel";
 
 const UUID = "5f0f6a2e-1b2c-4d3e-8f4a-9b8c7d6e5f4a";
 
-const validItem = { productId: UUID, quantity: 1, unitPrice: 2000, isOptional: false };
+// Le tunnel n'envoie JAMAIS de prix : ils sont recalculés par la fonction
+// Postgres create_web_reservation.
+const validItem = { productId: UUID, quantity: 1, isOptional: false };
 
 function validInput(overrides: Record<string, unknown> = {}) {
   return {
@@ -15,7 +17,9 @@ function validInput(overrides: Record<string, unknown> = {}) {
     startDate: "2026-08-01",
     endDate: "2026-08-05",
     items: [validItem],
-    participantValues: [{ attributeId: UUID, value: "42", participantIndex: 0 }],
+    participantValues: [
+      { itemIndex: 0, attributeId: UUID, value: "42", participantIndex: 0 },
+    ],
     acceptCgv: true,
     ...overrides,
   };
@@ -95,26 +99,47 @@ describe("createWebReservationSchema", () => {
     expect(parseInput(createWebReservationSchema, validInput({ items })).ok).toBe(false);
   });
 
+  it("rejette un item portant un prix (le client ne fixe jamais les prix)", () => {
+    const items = [{ ...validItem, unitPrice: 0 }];
+    const result = parseInput(createWebReservationSchema, validInput({ items }));
+    // Champ inconnu ignoré par Zod : le prix client n'atteint jamais la base.
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.items[0]).not.toHaveProperty("unitPrice");
+    }
+  });
+
   it.each([
     ["quantité nulle", { quantity: 0 }],
     ["quantité > 100", { quantity: 101 }],
     ["quantité non entière", { quantity: 2.5 }],
-    ["prix négatif", { unitPrice: -1 }],
-    ["prix non entier", { unitPrice: 9.99 }],
   ])("rejette un item avec %s", (_label, override) => {
     const items = [{ ...validItem, ...override }];
     expect(parseInput(createWebReservationSchema, validInput({ items })).ok).toBe(false);
   });
 
   it("rejette un attributeId de participant non-UUID", () => {
-    const participantValues = [{ attributeId: "hack", value: "42", participantIndex: 0 }];
+    const participantValues = [
+      { itemIndex: 0, attributeId: "hack", value: "42", participantIndex: 0 },
+    ];
     expect(
       parseInput(createWebReservationSchema, validInput({ participantValues })).ok,
     ).toBe(false);
   });
 
   it("rejette un participantIndex négatif", () => {
-    const participantValues = [{ attributeId: UUID, value: "42", participantIndex: -1 }];
+    const participantValues = [
+      { itemIndex: 0, attributeId: UUID, value: "42", participantIndex: -1 },
+    ];
+    expect(
+      parseInput(createWebReservationSchema, validInput({ participantValues })).ok,
+    ).toBe(false);
+  });
+
+  it("rejette un itemIndex hors bornes (0-49)", () => {
+    const participantValues = [
+      { itemIndex: 50, attributeId: UUID, value: "42", participantIndex: 0 },
+    ];
     expect(
       parseInput(createWebReservationSchema, validInput({ participantValues })).ok,
     ).toBe(false);

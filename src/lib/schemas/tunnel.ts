@@ -1,12 +1,29 @@
 import { z } from "zod";
 import { uuidSchema } from "./catalog";
-import { isoDateSchema, reservationItemSchema } from "./reservations";
+import { isoDateSchema } from "./reservations";
 
 // Schémas du tunnel de réservation web (client final NON authentifié).
-// L'action étant publique, la validation Zod est la seule barrière côté
-// serveur : tout champ entrant est validé strictement ici.
+// L'action étant publique, la validation Zod est la première barrière ;
+// la fonction Postgres create_web_reservation revalide et recalcule les
+// prix côté serveur (le client n'envoie JAMAIS de prix).
+
+const tunnelItemSchema = z.object({
+  productId: uuidSchema,
+  packId: uuidSchema.nullable().optional().default(null),
+  quantity: z
+    .number("Quantité invalide.")
+    .int("Quantité invalide.")
+    .min(1, "Quantité minimale : 1.")
+    .max(100, "Quantité maximale : 100."),
+  isOptional: z.boolean().optional().default(false),
+});
 
 const tunnelParticipantValueSchema = z.object({
+  itemIndex: z
+    .number("Index d'item invalide.")
+    .int("Index d'item invalide.")
+    .min(0, "Index d'item invalide.")
+    .max(49, "Index d'item invalide."),
   attributeId: uuidSchema,
   value: z.string().max(2000, "Valeur trop longue (max 2000 caractères)."),
   participantIndex: z
@@ -36,7 +53,7 @@ export const createWebReservationSchema = z
     startDate: isoDateSchema,
     endDate: isoDateSchema,
     items: z
-      .array(reservationItemSchema)
+      .array(tunnelItemSchema)
       .min(1, "Panier vide.")
       .max(50, "Trop de produits dans le panier (max 50)."),
     participantValues: z
@@ -52,3 +69,4 @@ export const createWebReservationSchema = z
   });
 
 export type CreateWebReservationInput = z.infer<typeof createWebReservationSchema>;
+export type TunnelItemInput = z.input<typeof tunnelItemSchema>;
