@@ -1,0 +1,132 @@
+# generated: 2026-03-16
+# project: rentic
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-16
+project: rentic
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Foundation, Auth & Accès
+  epic-1: in-progress
+  1-1-initialisation-projet-starter-template: done
+  1-2-schema-bdd-fondation-rls: done
+  1-3-inscription-loueur-email-mot-de-passe: done
+  1-4-connexion-deconnexion: done
+  1-5-middleware-autorisation-role: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Onboarding & Catalogue
+  epic-2: done
+  2-1-onboarding-profil-magasin: done
+  2-2-onboarding-premiere-categorie: done
+  2-3-crud-categories-produits: done
+  2-4-attributs-personnalises-categorie-eav: done
+  2-5-crud-produits-prix-web-magasin: done
+  2-6-gestion-unites-physiques-stock: done
+  2-7-gestion-marques: done
+  2-8-mise-a-jour-disponibilite-stock: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Packs & Tarification
+  epic-3: done
+  3-1-crud-packs-multi-produits: done
+  3-2-gestion-obligatoire-optionnel-produits-pack: done
+  3-3-tarification-specifique-item-pack: done
+  epic-3-retrospective: optional
+
+  # Epic 4: Gestion des Réservations Back-office
+  epic-4: done
+  4-1-schema-bdd-reservations: done
+  4-2-creation-reservation-manuelle: done
+  4-3-consultation-reservations-4-vues: done
+  4-4-modification-statut-reservation: done
+  4-5-collecte-attributs-participants-eav: done
+  4-6-toggle-vue-reservations-materiel: done
+  epic-4-retrospective: optional
+
+# AUDIT 2026-07-21 : statuts corrigés pour refléter l'état réel du code
+# (l'ancien fichier marquait tout "done" ; le commit "Epics 5-9" n'avait posé
+# qu'un squelette). Détail : docs/plan-reprise-2026-07.md
+
+  # Epic 5: Site Web & Tunnel de Réservation
+  epic-5: in-progress
+  5-1-configuration-site-web-landing-page: done
+  5-2-url-publique-slug-rendu-public: done
+  5-3-affichage-catalogue-public: done
+  5-4-configuration-cgv-cgu: done
+  5-5-tunnel-selection-dates-disponibilite: backlog # action serveur écrite, aucune UI
+  5-6-tunnel-selection-produits-packs: backlog # pas de panier ni de pages tunnel
+  5-7-tunnel-informations-participants: backlog # pas de formulaire participants
+  5-8-responsive-performance-pages-publiques: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Paiements & Facturation
+  epic-6: in-progress
+  6-1-onboarding-stripe-connect-express: review # action écrite, non branchée à l'UI, jamais testée
+  6-2-paiement-en-ligne-carte-bancaire: backlog # createPaymentIntentAction sans UI (dépend du tunnel)
+  6-3-paiement-especes-back-office: backlog # recordCashPaymentAction sans UI
+  6-4-generation-facture-pdf-conforme: backlog # src/features/invoicing/ vide
+  6-5-emails-transactionnels: backlog # src/lib/email/ vide (.gitkeep)
+  6-6-webhook-stripe-connect-reconciliation: review # route écrite, jamais testée en mode test Stripe
+  epic-6-retrospective: optional
+
+  # Epic 7: Abonnement SaaS
+  epic-7: in-progress
+  7-1-mois-essai-gratuit-inscription: done
+  7-2-souscription-plan-abonnement: done
+  7-3-cycle-vie-abonnement: review # webhook écrit, cycle complet jamais testé
+  7-4-consultation-gestion-abonnement: done
+  7-5-bandeau-alerte-blocage-abonnement-inactif: review # à vérifier en conditions réelles
+  epic-7-retrospective: optional
+
+  # Epic 8: Dashboard & Équipe
+  epic-8: in-progress
+  8-1-dashboard-owner-metriques-cles: done
+  8-2-dashboard-employe-reservations-jour: done
+  8-3-preparation-materiel-reservations-7-jours: review # à vérifier
+  8-4-invitation-employe-email: in-progress # invitation créée en BDD mais email jamais envoyé (TODO Resend)
+  8-5-gestion-comptes-employes: in-progress # toggle statut = placeholder (pas de colonne is_active)
+  8-6-navigation-role-sidebar-flottante: done
+  epic-8-retrospective: optional
+
+  # Epic 9: Administration Plateforme
+  epic-9: backlog # aucune route /admin, aucun rôle admin dans le middleware
+  9-1-dashboard-admin-metriques-abonnements: backlog
+  9-2-synchronisation-abonnements-webhooks: backlog
+  9-3-identification-abandons-onboarding: backlog
+  9-4-monitoring-applicatif-journalisation: backlog
+  epic-9-retrospective: optional

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rentic — Design Directions</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Bricolage Grotesque', sans-serif; background: #0f0f0f; color: #fff; }
+
+  /* Nav */
+  .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: #0f0f0f; border-bottom: 1px solid #222; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+  .nav h1 { font-size: 18px; font-weight: 700; color: #fff; white-space: nowrap; }
+  .nav-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-tab { padding: 6px 14px; border-radius: 8px; border: 1px solid #333; background: transparent; color: #aaa; font-family: inherit; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+  .nav-tab:hover { border-color: #5B6CF0; color: #fff; }
+  .nav-tab.active { background: #5B6CF0; border-color: #5B6CF0; color: #fff; }
+
+  /* Sections */
+  .direction { display: none; padding: 80px 0 40px; min-height: 100vh; }
+  .direction.active { display: block; }
+  .direction-header { padding: 24px 32px; }
+  .direction-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+  .direction-header p { color: #999; font-size: 14px; line-height: 1.5; max-width: 700px; }
+  .direction-tags { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .direction-tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; background: #1a1a2e; color: #8b8bf0; }
+
+  /* Mockup container */
+  .mockup-frame { margin: 0 32px 32px; border-radius: 16px; overflow: hidden; border: 1px solid #222; background: #fff; }
+
+  /* ============================================ */
+  /* DIRECTION 1: Clean Minimal */
+  /* ============================================ */
+  .d1 { background: #FAFAF9; color: #1a1a1a; display: flex; min-height: 600px; }
+  .d1-sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e5e3; padding: 20px 0; flex-shrink: 0; }
+  .d1-logo { padding: 0 20px 20px; font-size: 18px; font-weight: 700; color: #5B6CF0; display: flex; align-items: center; gap: 8px; }
+  .d1-logo svg { width: 24px; height: 24px; }
+  .d1-nav-item { padding: 10px 20px; font-size: 14px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+  .d1-nav-item:hover { background: #f5f5f4; color: #1a1a1a; }
+  .d1-nav-item.active { background: #EEF0FF; color: #5B6CF0; font-weight: 600; border-right: 3px solid #5B6CF0; }
+  .d1-main { flex: 1; padding: 24px 32px; overflow: auto; }
+  .d1-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .d1-topbar h2 { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  .d1-date { color: #999; font-size: 14px; }
+  .d1-toggle { display: flex; background: #f0f0ee; border-radius: 8px; padding: 3px; }
+  .d1-toggle-btn { padding: 7px 16px; border-radius: 6px; border: none; font-family: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
+  .d1-toggle-btn.active { background: #fff; color: #1a1a1a; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .d1-stats { display: flex; gap: 16px; margin-bottom: 24px; }
+  .d1-stat { background: #fff; border: 1px solid #e5e5e3; border-radius: 10px; padding: 16px 20px; flex: 1; }
+  .d1-stat-value { font-size: 28px; font-weight: 700; color: #1a1a1a; }
+  .d1-stat-label { font-size: 12px; color: #999; margin-top: 2px; }
+  .d1-card { background: #fff; border: 1px solid #e5e5e3; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; }
+  .d1-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .d1-card-name { font-weight: 600; font-size: 15px; }
+  .d1-card-time { font-size: 13px; color: #5B6CF0; font-weight: 600; }
+  .d1-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .d1-badge-confirmed { background: #ECFDF5; color: #059669; }
+  .d1-badge-pending { background: #FEF9C3; color: #A16207; }
+  .d1-equip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .d1-equip-item { background: #f5f5f4; padding: 4px 10px; border-radius: 6px; font-size: 12px; color: #555; }
+
+  /* ============================================ */
+  /* DIRECTION 2: Warm Bold */
+  /* ============================================ */
+  .d2 { background: #FBF8F4; color: #1a1a1a; display: flex; min-height: 600px; }
+  .d2-sidebar { width: 240px; background: #1E1B4B; padding: 20px 0; flex-shrink: 0; }
+  .d2-logo { padding: 0 20px 24px; font-size: 18px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .d2-nav-item { padding: 10px 20px; font-size: 14px; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; border-radius: 0 8px 8px 0; margin-right: 12px; }
+  .d2-nav-item:hover { color: #fff; background: rgba(255,255,255,0.08); }
+  .d2-nav-item.active { color: #fff; background: rgba(91,108,240,0.3); font-weight: 600; }
+  .d2-main { flex: 1; padding: 24px 32px; }
+  .d2-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .d2-greeting { font-size: 14px; color: #999; }
+  .d2-greeting strong { font-size: 22px; color: #1a1a1a; display: block; margin-top: 2px; }
+  .d2-toggle { display: flex; background: #E8E4DE; border-radius: 10px; padding: 4px; }
+  .d2-toggle-btn { padding: 8px 18px; border-radius: 8px; border: none; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: #777; transition: all 0.2s; }
+  .d2-toggle-btn.active { background: #5B6CF0; color: #fff; font-weight: 600; }
+  .d2-stats { display: flex; gap: 12px; margin-bottom: 20px; }
+  .d2-stat { border-radius: 12px; padding: 16px 20px; flex: 1; }
+  .d2-stat-blue { background: linear-gradient(135deg, #5B6CF0, #4F46E5); color: #fff; }
+  .d2-stat-orange { background: linear-gradient(135deg, #F59E0B, #EA580C); color: #fff; }
+  .d2-stat-green { background: linear-gradient(135deg, #22C55E, #16A34A); color: #fff; }
+  .d2-stat-value { font-size: 28px; font-weight: 700; }
+  .d2-stat-label { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .d2-card { background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid transparent; }
+  .d2-card-confirmed { border-left-color: #22C55E; }
+  .d2-card-pending { border-left-color: #F59E0B; }
+  .d2-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .d2-card-name { font-weight: 600; font-size: 15px; }
+  .d2-card-time { background: #EEF0FF; color: #5B6CF0; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .d2-equip { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .d2-equip-item { background: #FBF8F4; border: 1px solid #E8E4DE; padding: 4px 10px; border-radius: 8px; font-size: 12px; color: #555; }
+
+  /* ============================================ */
+  /* DIRECTION 3: Soft Rounded */
+  /* ============================================ */
+  .d3 { background: #F8F7FF; color: #1a1a1a; display: flex; min-height: 600px; }
+  .d3-sidebar { width: 240px; background: #fff; border-right: 1px solid #E8E5F0; padding: 20px 0; flex-shrink: 0; }
+  .d3-logo { padding: 0 20px 24px; font-size: 18px; font-weight: 700; color: #5B6CF0; }
+  .d3-nav-item { padding: 10px 16px; margin: 2px 12px; font-size: 14px; color: #888; cursor: pointer; display: flex; align-items: center; gap: 10px; border-radius: 12px; transition: all 0.15s; }
+  .d3-nav-item:hover { background: #F0EEFF; color: #5B6CF0; }
+  .d3-nav-item.active { background: #EEF0FF; color: #5B6CF0; font-weight: 600; }
+  .d3-main { flex: 1; padding: 24px 32px; }
+  .d3-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .d3-topbar h2 { font-size: 22px; font-weight: 700; }
+  .d3-topbar-right { display: flex; align-items: center; gap: 12px; }
+  .d3-toggle { display: flex; background: #EEEDF5; border-radius: 16px; padding: 4px; }
+  .d3-toggle-btn { padding: 8px 18px; border-radius: 14px; border: none; font-family: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #888; transition: all 0.2s; }
+  .d3-toggle-btn.active { background: #fff; color: #5B6CF0; font-weight: 600; box-shadow: 0 2px 8px rgba(91,108,240,0.15); }
+  .d3-progress { background: #fff; border-radius: 16px; padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+  .d3-progress-bar { flex: 1; height: 8px; background: #EEEDF5; border-radius: 4px; overflow: hidden; }
+  .d3-progress-fill { height: 100%; width: 65%; background: linear-gradient(90deg, #5B6CF0, #818CF8); border-radius: 4px; }
+  .d3-progress-text { font-size: 14px; font-weight: 600; color: #5B6CF0; white-space: nowrap; }
+  .d3-card { background: #fff; border-radius: 16px; padding: 18px 22px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: transform 0.15s, box-shadow 0.15s; }
+  .d3-card:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .d3-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .d3-card-name { font-weight: 600; font-size: 15px; }
+  .d3-card-time { font-size: 13px; color: #5B6CF0; font-weight: 600; }
+  .d3-badge { display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600; }
+  .d3-badge-confirmed { background: #E8FBF0; color: #059669; }
+  .d3-equip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .d3-equip-item { background: #F8F7FF; border: 1px solid #E8E5F0; padding: 5px 12px; border-radius: 12px; font-size: 12px; color: #555; }
+
+  /* ============================================ */
+  /* DIRECTION 4: Data-Dense Modern */
+  /* ============================================ */
+  .d4 { background: #FAFAF9; color: #1a1a1a; display: flex; min-height: 600px; }
+  .d4-sidebar { width: 56px; background: #fff; border-right: 1px solid #e5e5e3; padding: 16px 0; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .d4-sidebar-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; cursor: pointer; transition: all 0.15s; font-size: 16px; }
+  .d4-sidebar-icon:hover { background: #f5f5f4; color: #1a1a1a; }
+  .d4-sidebar-icon.active { background: #5B6CF0; color: #fff; }
+  .d4-main { flex: 1; padding: 16px 24px; }
+  .d4-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #e5e5e3; }
+  .d4-topbar h2 { font-size: 16px; font-weight: 700; }
+  .d4-topbar-right { display: flex; gap: 8px; align-items: center; }
+  .d4-toggle { display: flex; border: 1px solid #e5e5e3; border-radius: 6px; overflow: hidden; }
+  .d4-toggle-btn { padding: 5px 12px; border: none; font-family: inherit; font-size: 12px; cursor: pointer; background: #fff; color: #666; transition: all 0.15s; }
+  .d4-toggle-btn.active { background: #5B6CF0; color: #fff; }
+  .d4-stats-row { display: flex; gap: 12px; margin-bottom: 16px; }
+  .d4-stat-mini { background: #fff; border: 1px solid #e5e5e3; border-radius: 6px; padding: 10px 14px; flex: 1; }
+  .d4-stat-mini-value { font-size: 20px; font-weight: 700; }
+  .d4-stat-mini-label { font-size: 11px; color: #999; }
+  .d4-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e5e3; border-radius: 8px; overflow: hidden; }
+  .d4-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.5px; background: #fafaf9; border-bottom: 1px solid #e5e5e3; }
+  .d4-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f0f0ee; }
+  .d4-table tr:last-child td { border-bottom: none; }
+  .d4-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+  .d4-status-green { background: #22C55E; }
+  .d4-status-yellow { background: #F59E0B; }
+  .d4-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: #f5f5f4; color: #666; margin-right: 4px; }
+
+  /* ============================================ */
+  /* DIRECTION 5: Card Grid */
+  /* ============================================ */
+  .d5 { background: #F5F3EE; color: #1a1a1a; min-height: 600px; }
+  .d5-topnav { background: #fff; border-bottom: 1px solid #E8E4DE; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .d5-topnav-logo { font-size: 18px; font-weight: 700; color: #5B6CF0; }
+  .d5-topnav-links { display: flex; gap: 24px; }
+  .d5-topnav-link { font-size: 14px; color: #888; cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .d5-topnav-link.active { color: #5B6CF0; border-bottom-color: #5B6CF0; font-weight: 600; }
+  .d5-content { padding: 24px 32px; }
+  .d5-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .d5-header h2 { font-size: 24px; font-weight: 700; }
+  .d5-header-sub { color: #999; font-size: 14px; margin-top: 4px; }
+  .d5-toggle { display: flex; background: #fff; border: 1px solid #E8E4DE; border-radius: 10px; padding: 3px; }
+  .d5-toggle-btn { padding: 8px 16px; border-radius: 8px; border: none; font-family: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #888; transition: all 0.2s; }
+  .d5-toggle-btn.active { background: #5B6CF0; color: #fff; font-weight: 600; }
+  .d5-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .d5-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: box-shadow 0.15s; }
+  .d5-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .d5-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .d5-card-time-big { font-size: 24px; font-weight: 700; color: #5B6CF0; }
+  .d5-card-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .d5-card-detail { font-size: 13px; color: #888; }
+  .d5-card-equip { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0ede8; display: flex; flex-direction: column; gap: 6px; }
+  .d5-card-equip-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .d5-card-equip-name { color: #555; }
+  .d5-card-equip-attr { color: #999; }
+
+  /* ============================================ */
+  /* DIRECTION 6: Material View First */
+  /* ============================================ */
+  .d6 { background: #FAFAF9; color: #1a1a1a; display: flex; min-height: 600px; }
+  .d6-sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e5e3; padding: 20px 0; flex-shrink: 0; }
+  .d6-logo { padding: 0 20px 20px; font-size: 18px; font-weight: 700; color: #5B6CF0; }
+  .d6-nav-item { padding: 10px 20px; font-size: 14px; color: #666; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+  .d6-nav-item.active { background: #EEF0FF; color: #5B6CF0; font-weight: 600; }
+  .d6-main { flex: 1; padding: 24px 32px; }
+  .d6-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .d6-topbar h2 { font-size: 22px; font-weight: 700; }
+  .d6-toggle { display: flex; background: #f0f0ee; border-radius: 8px; padding: 3px; }
+  .d6-toggle-btn { padding: 7px 16px; border-radius: 6px; border: none; font-family: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #666; transition: all 0.2s; }
+  .d6-toggle-btn.active { background: #F59E0B; color: #fff; font-weight: 600; }
+  .d6-section { margin-bottom: 24px; }
+  .d6-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #e5e5e3; }
+  .d6-section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .d6-section-icon-ski { background: #EEF0FF; color: #5B6CF0; }
+  .d6-section-icon-boot { background: #FEF3C7; color: #D97706; }
+  .d6-section-icon-board { background: #ECFDF5; color: #059669; }
+  .d6-section-title { font-size: 16px; font-weight: 600; }
+  .d6-section-count { font-size: 13px; color: #999; }
+  .d6-mat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .d6-mat-card { background: #fff; border: 1px solid #e5e5e3; border-radius: 10px; padding: 14px; }
+  .d6-mat-attr { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .d6-mat-qty { font-size: 12px; color: #5B6CF0; font-weight: 600; margin-top: 2px; }
+  .d6-mat-resa { font-size: 11px; color: #999; margin-top: 6px; }
+  .d6-mat-check { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: #059669; }
+  .d6-mat-check input { accent-color: #059669; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <h1>Rentic — Design Directions</h1>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showDirection(1)">1. Clean Minimal</button>
+    <button class="nav-tab" onclick="showDirection(2)">2. Warm Bold</button>
+    <button class="nav-tab" onclick="showDirection(3)">3. Soft Rounded</button>
+    <button class="nav-tab" onclick="showDirection(4)">4. Data-Dense</button>
+    <button class="nav-tab" onclick="showDirection(5)">5. Card Grid</button>
+    <button class="nav-tab" onclick="showDirection(6)">6. Material View</button>
+  </div>
+</nav>
+
+<!-- DIRECTION 1: Clean Minimal -->
+<section class="direction active" id="dir-1">
+  <div class="direction-header">
+    <h2>Direction 1 — Clean Minimal</h2>
+    <p>Approche épurée, bordures fines, beaucoup de blanc. La sidebar est classique avec indicateur de page active. Les cards sont sobres avec des badges de statut discrets. Inspiré de Linear et Notion.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Sobre</span>
+      <span class="direction-tag">Professionnel</span>
+      <span class="direction-tag">Bordures fines</span>
+      <span class="direction-tag">Lisible</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d1">
+      <div class="d1-sidebar">
+        <div class="d1-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Rentic
+        </div>
+        <div class="d1-nav-item active">📋 Aujourd'hui</div>
+        <div class="d1-nav-item">📦 Réservations</div>
+        <div class="d1-nav-item">🏷️ Catalogue</div>
+        <div class="d1-nav-item">🌐 Site Web</div>
+        <div class="d1-nav-item">📊 Statistiques</div>
+        <div class="d1-nav-item">⚙️ Paramètres</div>
+      </div>
+      <div class="d1-main">
+        <div class="d1-topbar">
+          <div>
+            <h2>Prêt pour la journée ?</h2>
+            <div class="d1-date">Mercredi 5 mars 2026</div>
+          </div>
+          <div class="d1-toggle">
+            <button class="d1-toggle-btn active">Réservations</button>
+            <button class="d1-toggle-btn">Matériel</button>
+          </div>
+        </div>
+        <div class="d1-stats">
+          <div class="d1-stat">
+            <div class="d1-stat-value">8</div>
+            <div class="d1-stat-label">Réservations</div>
+          </div>
+          <div class="d1-stat">
+            <div class="d1-stat-value" style="color:#5B6CF0">23</div>
+            <div class="d1-stat-label">Équipements à préparer</div>
+          </div>
+          <div class="d1-stat">
+            <div class="d1-stat-value" style="color:#22C55E">15</div>
+            <div class="d1-stat-label">Préparés</div>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="d1-card-header">
+            <div><span class="d1-card-name">Famille Dupont</span> <span class="d1-badge d1-badge-confirmed">Confirmée</span></div>
+            <span class="d1-card-time">09:00</span>
+          </div>
+          <div style="font-size:13px;color:#666">4 participants · Pack Ski Famille</div>
+          <div class="d1-equip">
+            <span class="d1-equip-item">Ski 170cm</span>
+            <span class="d1-equip-item">Ski 155cm</span>
+            <span class="d1-equip-item">Ski 120cm ×2</span>
+            <span class="d1-equip-item">Chaussures 42</span>
+            <span class="d1-equip-item">Chaussures 38</span>
+            <span class="d1-equip-item">Chaussures 33 ×2</span>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="d1-card-header">
+            <div><span class="d1-card-name">Martin Lucas</span> <span class="d1-badge d1-badge-confirmed">Confirmée</span></div>
+            <span class="d1-card-time">10:30</span>
+          </div>
+          <div style="font-size:13px;color:#666">1 participant · Snowboard</div>
+          <div class="d1-equip">
+            <span class="d1-equip-item">Snowboard 155cm</span>
+            <span class="d1-equip-item">Boots 43</span>
+          </div>
+        </div>
+        <div class="d1-card">
+          <div class="d1-card-header">
+            <div><span class="d1-card-name">Sophie Bernard</span> <span class="d1-badge d1-badge-pending">En attente</span></div>
+            <span class="d1-card-time">11:00</span>
+          </div>
+          <div style="font-size:13px;color:#666">2 participants · Ski Individuel</div>
+          <div class="d1-equip">
+            <span class="d1-equip-item">Ski 165cm</span>
+            <span class="d1-equip-item">Ski 145cm</span>
+            <span class="d1-equip-item">Chaussures 39</span>
+            <span class="d1-equip-item">Chaussures 36</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTION 2: Warm Bold -->
+<section class="direction" id="dir-2">
+  <div class="direction-header">
+    <h2>Direction 2 — Warm Bold</h2>
+    <p>Sidebar sombre (indigo profond), stats colorées avec gradients, border-left sur les cards pour le statut. Plus de couleur, plus de personnalité. L'accent orange/ambre est visible. Inspiré de Vercel et Stripe Dashboard.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Coloré</span>
+      <span class="direction-tag">Contrasté</span>
+      <span class="direction-tag">Chaleureux</span>
+      <span class="direction-tag">Bold</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d2">
+      <div class="d2-sidebar">
+        <div class="d2-logo">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Rentic
+        </div>
+        <div class="d2-nav-item active">📋 Aujourd'hui</div>
+        <div class="d2-nav-item">📦 Réservations</div>
+        <div class="d2-nav-item">🏷️ Catalogue</div>
+        <div class="d2-nav-item">🌐 Site Web</div>
+        <div class="d2-nav-item">📊 Stats</div>
+        <div class="d2-nav-item">⚙️ Paramètres</div>
+      </div>
+      <div class="d2-main">
+        <div class="d2-topbar">
+          <div class="d2-greeting">
+            Bonjour Jean 👋
+            <strong>Prêt pour la journée ?</strong>
+          </div>
+          <div class="d2-toggle">
+            <button class="d2-toggle-btn active">Réservations</button>
+            <button class="d2-toggle-btn">Matériel</button>
+          </div>
+        </div>
+        <div class="d2-stats">
+          <div class="d2-stat d2-stat-blue">
+            <div class="d2-stat-value">8</div>
+            <div class="d2-stat-label">Réservations</div>
+          </div>
+          <div class="d2-stat d2-stat-orange">
+            <div class="d2-stat-value">23</div>
+            <div class="d2-stat-label">À préparer</div>
+          </div>
+          <div class="d2-stat d2-stat-green">
+            <div class="d2-stat-value">15</div>
+            <div class="d2-stat-label">Préparés</div>
+          </div>
+        </div>
+        <div class="d2-card d2-card-confirmed">
+          <div class="d2-card-header">
+            <span class="d2-card-name">Famille Dupont</span>
+            <span class="d2-card-time">09:00</span>
+          </div>
+          <div style="font-size:13px;color:#888">4 participants · Pack Ski Famille · Confirmée</div>
+          <div class="d2-equip">
+            <span class="d2-equip-item">Ski 170cm</span>
+            <span class="d2-equip-item">Ski 155cm</span>
+            <span class="d2-equip-item">Ski 120cm ×2</span>
+            <span class="d2-equip-item">Chaussures 42, 38, 33×2</span>
+          </div>
+        </div>
+        <div class="d2-card d2-card-confirmed">
+          <div class="d2-card-header">
+            <span class="d2-card-name">Martin Lucas</span>
+            <span class="d2-card-time">10:30</span>
+          </div>
+          <div style="font-size:13px;color:#888">1 participant · Snowboard · Confirmée</div>
+          <div class="d2-equip">
+            <span class="d2-equip-item">Snowboard 155cm</span>
+            <span class="d2-equip-item">Boots 43</span>
+          </div>
+        </div>
+        <div class="d2-card d2-card-pending">
+          <div class="d2-card-header">
+            <span class="d2-card-name">Sophie Bernard</span>
+            <span class="d2-card-time">11:00</span>
+          </div>
+          <div style="font-size:13px;color:#888">2 participants · Ski Individuel · En attente</div>
+          <div class="d2-equip">
+            <span class="d2-equip-item">Ski 165cm</span>
+            <span class="d2-equip-item">Ski 145cm</span>
+            <span class="d2-equip-item">Chaussures 39, 36</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTION 3: Soft Rounded -->
+<section class="direction" id="dir-3">
+  <div class="direction-header">
+    <h2>Direction 3 — Soft Rounded</h2>
+    <p>Border-radius généreux (16px), ombres douces, fond légèrement violet/lavande. Cards avec hover effect. Barre de progression visible pour le matériel préparé. Ambiance douce et accueillante. Inspiré de Notion et Arc Browser.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Doux</span>
+      <span class="direction-tag">Arrondi</span>
+      <span class="direction-tag">Accueillant</span>
+      <span class="direction-tag">Ombres douces</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d3">
+      <div class="d3-sidebar">
+        <div class="d3-logo">✦ Rentic</div>
+        <div class="d3-nav-item active">📋 Aujourd'hui</div>
+        <div class="d3-nav-item">📦 Réservations</div>
+        <div class="d3-nav-item">🏷️ Catalogue</div>
+        <div class="d3-nav-item">🌐 Site Web</div>
+        <div class="d3-nav-item">📊 Statistiques</div>
+        <div class="d3-nav-item">⚙️ Paramètres</div>
+      </div>
+      <div class="d3-main">
+        <div class="d3-topbar">
+          <h2>Aujourd'hui — 5 mars</h2>
+          <div class="d3-topbar-right">
+            <div class="d3-toggle">
+              <button class="d3-toggle-btn active">Réservations</button>
+              <button class="d3-toggle-btn">Matériel</button>
+            </div>
+          </div>
+        </div>
+        <div class="d3-progress">
+          <span style="font-size:14px;color:#555">Préparation</span>
+          <div class="d3-progress-bar">
+            <div class="d3-progress-fill"></div>
+          </div>
+          <span class="d3-progress-text">15/23 préparés</span>
+        </div>
+        <div class="d3-card">
+          <div class="d3-card-header">
+            <div><span class="d3-card-name">Famille Dupont</span> <span class="d3-badge d3-badge-confirmed">Confirmée</span></div>
+            <span class="d3-card-time">09:00</span>
+          </div>
+          <div style="font-size:13px;color:#888">4 participants · Pack Ski Famille</div>
+          <div class="d3-equip">
+            <span class="d3-equip-item">🎿 Ski 170cm</span>
+            <span class="d3-equip-item">🎿 Ski 155cm</span>
+            <span class="d3-equip-item">🎿 Ski 120cm ×2</span>
+            <span class="d3-equip-item">👟 42, 38, 33×2</span>
+          </div>
+        </div>
+        <div class="d3-card">
+          <div class="d3-card-header">
+            <div><span class="d3-card-name">Martin Lucas</span> <span class="d3-badge d3-badge-confirmed">Confirmée</span></div>
+            <span class="d3-card-time">10:30</span>
+          </div>
+          <div style="font-size:13px;color:#888">1 participant · Snowboard</div>
+          <div class="d3-equip">
+            <span class="d3-equip-item">🏂 Snowboard 155cm</span>
+            <span class="d3-equip-item">👟 Boots 43</span>
+          </div>
+        </div>
+        <div class="d3-card">
+          <div class="d3-card-header">
+            <div><span class="d3-card-name">Sophie Bernard</span> <span style="display:inline-block;padding:4px 12px;border-radius:16px;font-size:11px;font-weight:600;background:#FEF9C3;color:#A16207">En attente</span></div>
+            <span class="d3-card-time">11:00</span>
+          </div>
+          <div style="font-size:13px;color:#888">2 participants · Ski Individuel</div>
+          <div class="d3-equip">
+            <span class="d3-equip-item">🎿 Ski 165cm</span>
+            <span class="d3-equip-item">🎿 Ski 145cm</span>
+            <span class="d3-equip-item">👟 39, 36</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTION 4: Data-Dense Modern -->
+<section class="direction" id="dir-4">
+  <div class="direction-header">
+    <h2>Direction 4 — Data-Dense Modern</h2>
+    <p>Sidebar réduite en icônes (56px), tableau dense, toggle compact, mini-stats. Maximum d'information visible sans scroll. Pour les loueurs qui gèrent beaucoup de réservations. Inspiré de Linear et GitHub.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Dense</span>
+      <span class="direction-tag">Efficace</span>
+      <span class="direction-tag">Tableau</span>
+      <span class="direction-tag">Compact</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d4">
+      <div class="d4-sidebar">
+        <div class="d4-sidebar-icon active" title="Aujourd'hui">📋</div>
+        <div class="d4-sidebar-icon" title="Réservations">📦</div>
+        <div class="d4-sidebar-icon" title="Catalogue">🏷️</div>
+        <div class="d4-sidebar-icon" title="Site Web">🌐</div>
+        <div class="d4-sidebar-icon" title="Stats">📊</div>
+        <div class="d4-sidebar-icon" title="Paramètres">⚙️</div>
+      </div>
+      <div class="d4-main">
+        <div class="d4-topbar">
+          <h2>Aujourd'hui — Mer. 5 mars</h2>
+          <div class="d4-topbar-right">
+            <div class="d4-toggle">
+              <button class="d4-toggle-btn active">Réservations</button>
+              <button class="d4-toggle-btn">Matériel</button>
+            </div>
+          </div>
+        </div>
+        <div class="d4-stats-row">
+          <div class="d4-stat-mini"><div class="d4-stat-mini-value">8</div><div class="d4-stat-mini-label">Résas</div></div>
+          <div class="d4-stat-mini"><div class="d4-stat-mini-value" style="color:#5B6CF0">23</div><div class="d4-stat-mini-label">Équipements</div></div>
+          <div class="d4-stat-mini"><div class="d4-stat-mini-value" style="color:#22C55E">15</div><div class="d4-stat-mini-label">Préparés</div></div>
+          <div class="d4-stat-mini"><div class="d4-stat-mini-value" style="color:#F59E0B">1</div><div class="d4-stat-mini-label">En attente</div></div>
+        </div>
+        <table class="d4-table">
+          <thead>
+            <tr><th>Heure</th><th>Client</th><th>Statut</th><th>Type</th><th>Participants</th><th>Équipement</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:600;color:#5B6CF0">09:00</td>
+              <td style="font-weight:600">Fam. Dupont</td>
+              <td><span class="d4-status d4-status-green"></span> Confirmée</td>
+              <td>Pack Ski Famille</td>
+              <td>4</td>
+              <td><span class="d4-tag">Ski ×4</span><span class="d4-tag">Chaussures ×4</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:#5B6CF0">10:30</td>
+              <td style="font-weight:600">Martin L.</td>
+              <td><span class="d4-status d4-status-green"></span> Confirmée</td>
+              <td>Snowboard</td>
+              <td>1</td>
+              <td><span class="d4-tag">Board ×1</span><span class="d4-tag">Boots ×1</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:#5B6CF0">11:00</td>
+              <td style="font-weight:600">Sophie B.</td>
+              <td><span class="d4-status d4-status-yellow"></span> En attente</td>
+              <td>Ski Individuel</td>
+              <td>2</td>
+              <td><span class="d4-tag">Ski ×2</span><span class="d4-tag">Chaussures ×2</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:#5B6CF0">11:30</td>
+              <td style="font-weight:600">Pierre M.</td>
+              <td><span class="d4-status d4-status-green"></span> Confirmée</td>
+              <td>Pack Débutant</td>
+              <td>1</td>
+              <td><span class="d4-tag">Ski ×1</span><span class="d4-tag">Chaussures ×1</span><span class="d4-tag">Casque ×1</span></td>
+            </tr>
+            <tr>
+              <td style="font-weight:600;color:#5B6CF0">14:00</td>
+              <td style="font-weight:600">Fam. Moreau</td>
+              <td><span class="d4-status d4-status-green"></span> Confirmée</td>
+              <td>Ski Individuel</td>
+              <td>3</td>
+              <td><span class="d4-tag">Ski ×3</span><span class="d4-tag">Chaussures ×3</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTION 5: Card Grid -->
+<section class="direction" id="dir-5">
+  <div class="direction-header">
+    <h2>Direction 5 — Card Grid</h2>
+    <p>Navigation en top-bar, contenu en grille de cards. Chaque réservation est une card autonome avec l'heure bien visible. Layout aéré, pas de sidebar. Inspiré de Trello et Monday.com.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Grille</span>
+      <span class="direction-tag">Visuel</span>
+      <span class="direction-tag">Top-nav</span>
+      <span class="direction-tag">Aéré</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d5">
+      <div class="d5-topnav">
+        <div class="d5-topnav-logo">✦ Rentic</div>
+        <div class="d5-topnav-links">
+          <span class="d5-topnav-link active">Aujourd'hui</span>
+          <span class="d5-topnav-link">Réservations</span>
+          <span class="d5-topnav-link">Catalogue</span>
+          <span class="d5-topnav-link">Site Web</span>
+          <span class="d5-topnav-link">Stats</span>
+        </div>
+        <div style="width:32px;height:32px;border-radius:50%;background:#5B6CF0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600">JD</div>
+      </div>
+      <div class="d5-content">
+        <div class="d5-header">
+          <div>
+            <h2>Mercredi 5 mars</h2>
+            <div class="d5-header-sub">8 réservations · 23 équipements · 15 préparés</div>
+          </div>
+          <div class="d5-toggle">
+            <button class="d5-toggle-btn active">Réservations</button>
+            <button class="d5-toggle-btn">Matériel</button>
+          </div>
+        </div>
+        <div class="d5-grid">
+          <div class="d5-card">
+            <div class="d5-card-top">
+              <span class="d5-card-time-big">09:00</span>
+              <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669">Confirmée</span>
+            </div>
+            <div class="d5-card-name">Famille Dupont</div>
+            <div class="d5-card-detail">4 participants · Pack Ski Famille</div>
+            <div class="d5-card-equip">
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Ski ×4</span><span class="d5-card-equip-attr">170, 155, 120, 120</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Chaussures ×4</span><span class="d5-card-equip-attr">42, 38, 33, 33</span></div>
+            </div>
+          </div>
+          <div class="d5-card">
+            <div class="d5-card-top">
+              <span class="d5-card-time-big">10:30</span>
+              <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669">Confirmée</span>
+            </div>
+            <div class="d5-card-name">Martin Lucas</div>
+            <div class="d5-card-detail">1 participant · Snowboard</div>
+            <div class="d5-card-equip">
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Snowboard ×1</span><span class="d5-card-equip-attr">155cm</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Boots ×1</span><span class="d5-card-equip-attr">43</span></div>
+            </div>
+          </div>
+          <div class="d5-card">
+            <div class="d5-card-top">
+              <span class="d5-card-time-big">11:00</span>
+              <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#FEF9C3;color:#A16207">En attente</span>
+            </div>
+            <div class="d5-card-name">Sophie Bernard</div>
+            <div class="d5-card-detail">2 participants · Ski Individuel</div>
+            <div class="d5-card-equip">
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Ski ×2</span><span class="d5-card-equip-attr">165, 145</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Chaussures ×2</span><span class="d5-card-equip-attr">39, 36</span></div>
+            </div>
+          </div>
+          <div class="d5-card">
+            <div class="d5-card-top">
+              <span class="d5-card-time-big">11:30</span>
+              <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669">Confirmée</span>
+            </div>
+            <div class="d5-card-name">Pierre Martin</div>
+            <div class="d5-card-detail">1 participant · Pack Débutant</div>
+            <div class="d5-card-equip">
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Ski ×1</span><span class="d5-card-equip-attr">175cm</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Chaussures ×1</span><span class="d5-card-equip-attr">44</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Casque ×1</span><span class="d5-card-equip-attr">L</span></div>
+            </div>
+          </div>
+          <div class="d5-card">
+            <div class="d5-card-top">
+              <span class="d5-card-time-big">14:00</span>
+              <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;background:#ECFDF5;color:#059669">Confirmée</span>
+            </div>
+            <div class="d5-card-name">Famille Moreau</div>
+            <div class="d5-card-detail">3 participants · Ski Individuel</div>
+            <div class="d5-card-equip">
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Ski ×3</span><span class="d5-card-equip-attr">180, 165, 140</span></div>
+              <div class="d5-card-equip-row"><span class="d5-card-equip-name">Chaussures ×3</span><span class="d5-card-equip-attr">44, 39, 35</span></div>
+            </div>
+          </div>
+          <div class="d5-card" style="background:#F5F3EE;border:2px dashed #D5D0C7;display:flex;align-items:center;justify-content:center;min-height:180px">
+            <div style="text-align:center;color:#999">
+              <div style="font-size:24px;margin-bottom:8px">+</div>
+              <div style="font-size:13px">Nouvelle réservation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTION 6: Material View First -->
+<section class="direction" id="dir-6">
+  <div class="direction-header">
+    <h2>Direction 6 — Vue Matériel d'abord</h2>
+    <p>Montre la Vue Matériel (le toggle signature de Rentic). Le matériel est regroupé par type d'équipement avec des cards par attribut. Chaque item est cochable "préparé". Le toggle active utilise l'accent orange. C'est la killer feature en action.</p>
+    <div class="direction-tags">
+      <span class="direction-tag">Vue Matériel</span>
+      <span class="direction-tag">Regroupé</span>
+      <span class="direction-tag">Cochable</span>
+      <span class="direction-tag">Opérationnel</span>
+    </div>
+  </div>
+  <div class="mockup-frame">
+    <div class="d6">
+      <div class="d6-sidebar">
+        <div class="d6-logo">✦ Rentic</div>
+        <div class="d6-nav-item active">📋 Aujourd'hui</div>
+        <div class="d6-nav-item">📦 Réservations</div>
+        <div class="d6-nav-item">🏷️ Catalogue</div>
+        <div class="d6-nav-item">🌐 Site Web</div>
+        <div class="d6-nav-item">📊 Statistiques</div>
+        <div class="d6-nav-item">⚙️ Paramètres</div>
+      </div>
+      <div class="d6-main">
+        <div class="d6-topbar">
+          <h2>Préparation — 5 mars</h2>
+          <div class="d6-toggle">
+            <button class="d6-toggle-btn">Réservations</button>
+            <button class="d6-toggle-btn active">Matériel</button>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e5e3;border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px">
+          <span style="font-size:14px;color:#555">Progression</span>
+          <div style="flex:1;height:8px;background:#f0f0ee;border-radius:4px;overflow:hidden"><div style="height:100%;width:65%;background:#22C55E;border-radius:4px"></div></div>
+          <span style="font-size:14px;font-weight:600;color:#22C55E">15/23</span>
+        </div>
+
+        <div class="d6-section">
+          <div class="d6-section-header">
+            <div class="d6-section-icon d6-section-icon-ski">🎿</div>
+            <span class="d6-section-title">Ski</span>
+            <span class="d6-section-count">— 9 unités</span>
+          </div>
+          <div class="d6-mat-grid">
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Taille 170cm</div>
+              <div class="d6-mat-qty">1 unité</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Taille 165cm</div>
+              <div class="d6-mat-qty">1 unité</div>
+              <div class="d6-mat-resa">Bernard · 11:00</div>
+              <div class="d6-mat-check"><input type="checkbox"> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Taille 155cm</div>
+              <div class="d6-mat-qty">1 unité</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Taille 145cm</div>
+              <div class="d6-mat-qty">1 unité</div>
+              <div class="d6-mat-resa">Bernard · 11:00</div>
+              <div class="d6-mat-check"><input type="checkbox"> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Taille 120cm</div>
+              <div class="d6-mat-qty">2 unités</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d6-section">
+          <div class="d6-section-header">
+            <div class="d6-section-icon d6-section-icon-boot">👟</div>
+            <span class="d6-section-title">Chaussures</span>
+            <span class="d6-section-count">— 8 paires</span>
+          </div>
+          <div class="d6-mat-grid">
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Pointure 42</div>
+              <div class="d6-mat-qty">1 paire</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Pointure 39</div>
+              <div class="d6-mat-qty">1 paire</div>
+              <div class="d6-mat-resa">Bernard · 11:00</div>
+              <div class="d6-mat-check"><input type="checkbox"> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Pointure 38</div>
+              <div class="d6-mat-qty">1 paire</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Pointure 36</div>
+              <div class="d6-mat-qty">1 paire</div>
+              <div class="d6-mat-resa">Bernard · 11:00</div>
+              <div class="d6-mat-check"><input type="checkbox"> Préparé</div>
+            </div>
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">Pointure 33</div>
+              <div class="d6-mat-qty">2 paires</div>
+              <div class="d6-mat-resa">Dupont · 09:00</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d6-section">
+          <div class="d6-section-header">
+            <div class="d6-section-icon d6-section-icon-board">🏂</div>
+            <span class="d6-section-title">Snowboard</span>
+            <span class="d6-section-count">— 1 unité</span>
+          </div>
+          <div class="d6-mat-grid">
+            <div class="d6-mat-card">
+              <div class="d6-mat-attr">155cm</div>
+              <div class="d6-mat-qty">1 unité</div>
+              <div class="d6-mat-resa">Lucas · 10:30</div>
+              <div class="d6-mat-check"><input type="checkbox" checked> Préparé</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function showDirection(n) {
+  document.querySelectorAll('.direction').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dir-' + n).classList.add('active');
+  document.querySelectorAll('.nav-tab')[n-1].classList.add('active');
+}
+</script>
+</body>
+</html>
