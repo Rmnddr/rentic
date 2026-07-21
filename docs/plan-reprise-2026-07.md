@@ -90,12 +90,18 @@ Boutique de démo en base : `glisse-test` (Glisse Pyrénées, 3 produits, 1 pack
 
 Compte de démo pour tester : `demo-owner@glisse-test.fr` (mot de passe généré, voir scratchpad de session) sur la boutique `glisse-test`, avec un compte Stripe Connect de test actif.
 
-## Phase 4 — Admin plateforme & finitions (2 jours)
+## Phase 4 — Admin plateforme & finitions ✅ FAIT le 21/07/2026
 
-- [ ] Rôle `platform_admin` dans le middleware + routes `/admin` (métriques abonnements, abandons d'onboarding)
-- [ ] Vérifier cycle de vie abonnement complet (essai → payant → échec paiement → blocage + bandeau)
-- [ ] e2e Playwright : signup → onboarding → catalogue → résa manuelle
-- [ ] Mettre à jour `sprint-status.yaml` au fil de l'eau
+- [x] Rôle admin plateforme (table `platform_admins` + `is_platform_admin()`, pas de modification de l'enum `user_role`) et routes `/admin` : vue d'ensemble (MRR estimé, statuts d'abonnement, CA encaissé), liste des loueurs, abandons d'onboarding (vue `admin_onboarding_funnel`)
+- [x] Cycle de vie abonnement vérifié en navigateur : essai → bandeau d'alerte à J-7 → expiré → blocage effectif vers `/subscription`
+- [x] Bandeau d'alerte + blocage (story 7.5) : **n'existaient tout simplement pas**, `subscription_active` n'était lu nulle part
+- [x] e2e Playwright : 6 tests verts (tunnel complet, indisponibilité de stock, authentification, protection `/admin`) avec seed isolé et nettoyage
+- [x] `sprint-status.yaml` mis à jour
+
+**🔴 Bug critique découvert : le middleware ne s'exécutait PAS.**
+`middleware.ts` était à la racine du projet alors que le code vit dans `src/` — Next.js ne le chargeait jamais (manifeste middleware vide). **Toute la protection de routes était du code mort depuis la création du projet** : contrôle d'authentification, restriction des routes propriétaire… Seul le garde `redirect("/login")` du layout dashboard faisait illusion. Corrigé par le passage à `src/proxy.ts` (convention Next 16, `middleware.ts` étant déprécié), vérifié par une redirection de contrôle puis par les tests e2e.
+
+Autre correctif : `CardTitle` rendait un `<div>`, donc les pages publiques (connexion, inscription, onboarding) n'exposaient **aucun `h1`** — ajout d'un `asChild` et de vrais headings (a11y + SEO).
 
 ---
 

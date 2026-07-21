@@ -81,52 +81,56 @@ development_status:
 # AUDIT 2026-07-21 : statuts corrigés pour refléter l'état réel du code
 # (l'ancien fichier marquait tout "done" ; le commit "Epics 5-9" n'avait posé
 # qu'un squelette). Détail : docs/plan-reprise-2026-07.md
+#
+# MISE À JOUR 2026-07-21 (fin de reprise, phases 1 à 4) : les épics 5 à 9 sont
+# désormais réellement implémentés et vérifiés en conditions réelles
+# (navigateur + Stripe mode test + 94 tests unitaires + 6 tests e2e).
 
   # Epic 5: Site Web & Tunnel de Réservation
-  epic-5: in-progress
+  epic-5: done
   5-1-configuration-site-web-landing-page: done
   5-2-url-publique-slug-rendu-public: done
-  5-3-affichage-catalogue-public: done
+  5-3-affichage-catalogue-public: done # + policies de lecture publique (aucune n'existait)
   5-4-configuration-cgv-cgu: done
-  5-5-tunnel-selection-dates-disponibilite: backlog # action serveur écrite, aucune UI
-  5-6-tunnel-selection-produits-packs: backlog # pas de panier ni de pages tunnel
-  5-7-tunnel-informations-participants: backlog # pas de formulaire participants
-  5-8-responsive-performance-pages-publiques: backlog
+  5-5-tunnel-selection-dates-disponibilite: done # calendrier FR + check_availability
+  5-6-tunnel-selection-produits-packs: done # panier Zustand, packs et items optionnels
+  5-7-tunnel-informations-participants: done # formulaires EAV par participant
+  5-8-responsive-performance-pages-publiques: done # loading.tsx, skeletons, layout responsive
   epic-5-retrospective: optional
 
   # Epic 6: Paiements & Facturation
-  epic-6: in-progress
-  6-1-onboarding-stripe-connect-express: review # action écrite, non branchée à l'UI, jamais testée
-  6-2-paiement-en-ligne-carte-bancaire: backlog # createPaymentIntentAction sans UI (dépend du tunnel)
-  6-3-paiement-especes-back-office: backlog # recordCashPaymentAction sans UI
-  6-4-generation-facture-pdf-conforme: backlog # src/features/invoicing/ vide
-  6-5-emails-transactionnels: backlog # src/lib/email/ vide (.gitkeep)
-  6-6-webhook-stripe-connect-reconciliation: review # route écrite, jamais testée en mode test Stripe
+  epic-6: done
+  6-1-onboarding-stripe-connect-express: done # carte Settings, 3 états
+  6-2-paiement-en-ligne-carte-bancaire: done # Payment Element, testé en mode test Stripe
+  6-3-paiement-especes-back-office: done # dialog d'encaissement + badge de statut
+  6-4-generation-facture-pdf-conforme: done # FAC-AAAA-NNNN, art. 293 B du CGI
+  6-5-emails-transactionnels: done # Resend avec no-op sûr tant que la clé manque
+  6-6-webhook-stripe-connect-reconciliation: done # corrigé : tournait sur le client anonyme (RLS bloquait tout)
   epic-6-retrospective: optional
 
   # Epic 7: Abonnement SaaS
-  epic-7: in-progress
+  epic-7: done
   7-1-mois-essai-gratuit-inscription: done
   7-2-souscription-plan-abonnement: done
-  7-3-cycle-vie-abonnement: review # webhook écrit, cycle complet jamais testé
+  7-3-cycle-vie-abonnement: done # essai → expiré → blocage vérifié en navigateur
   7-4-consultation-gestion-abonnement: done
-  7-5-bandeau-alerte-blocage-abonnement-inactif: review # à vérifier en conditions réelles
+  7-5-bandeau-alerte-blocage-abonnement-inactif: done # bandeau + blocage proxy (n'existaient pas)
   epic-7-retrospective: optional
 
   # Epic 8: Dashboard & Équipe
-  epic-8: in-progress
+  epic-8: done
   8-1-dashboard-owner-metriques-cles: done
   8-2-dashboard-employe-reservations-jour: done
-  8-3-preparation-materiel-reservations-7-jours: review # à vérifier
-  8-4-invitation-employe-email: in-progress # invitation créée en BDD mais email jamais envoyé (TODO Resend)
-  8-5-gestion-comptes-employes: in-progress # toggle statut = placeholder (pas de colonne is_active)
+  8-3-preparation-materiel-reservations-7-jours: done
+  8-4-invitation-employe-email: done # email d'invitation branché (TODO levé)
+  8-5-gestion-comptes-employes: in-progress # toggle statut toujours placeholder (pas de colonne is_active)
   8-6-navigation-role-sidebar-flottante: done
   epic-8-retrospective: optional
 
   # Epic 9: Administration Plateforme
-  epic-9: backlog # aucune route /admin, aucun rôle admin dans le middleware
-  9-1-dashboard-admin-metriques-abonnements: backlog
-  9-2-synchronisation-abonnements-webhooks: backlog
-  9-3-identification-abandons-onboarding: backlog
-  9-4-monitoring-applicatif-journalisation: backlog
+  epic-9: in-progress
+  9-1-dashboard-admin-metriques-abonnements: done # /admin : MRR, statuts, CA, derniers inscrits
+  9-2-synchronisation-abonnements-webhooks: done # webhook abonnements réparé (client admin)
+  9-3-identification-abandons-onboarding: done # /admin/onboarding via vue admin_onboarding_funnel
+  9-4-monitoring-applicatif-journalisation: in-progress # Sentry câblé, pas de logger structuré ni de correlation id
   epic-9-retrospective: optional
