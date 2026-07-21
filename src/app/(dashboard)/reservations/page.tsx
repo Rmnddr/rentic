@@ -1,12 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CashPaymentDialog } from "@/features/payments/components/cash-payment-dialog";
 import { CreateReservationDialog } from "@/features/reservations/components/create-reservation-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, FileText } from "lucide-react";
 
 const STATUS_CONFIG: Record<
   string,
@@ -26,6 +28,17 @@ export default async function ReservationsPage() {
     .from("reservations")
     .select("id, customer_name, customer_email, customer_phone, start_date, end_date, status, source, total_price, created_at")
     .order("start_date", { ascending: true });
+
+  // Statut de paiement : une réservation est "Payée" dès qu'un paiement
+  // succeeded existe (RLS limite déjà les payments au shop de l'utilisateur).
+  const { data: succeededPayments } = await supabase
+    .from("payments")
+    .select("reservation_id")
+    .eq("status", "succeeded");
+
+  const paidReservationIds = new Set(
+    succeededPayments?.map((p) => p.reservation_id) ?? [],
+  );
 
   const upcoming = reservations?.filter(
     (r) => r.status === "confirmed" && r.start_date > today,
@@ -61,6 +74,7 @@ export default async function ReservationsPage() {
             label: res.status,
             variant: "outline" as const,
           };
+          const isPaid = paidReservationIds.has(res.id);
 
           return (
             <div
@@ -92,7 +106,36 @@ export default async function ReservationsPage() {
                 <p className="text-sm font-semibold tabular-nums">
                   {(res.total_price / 100).toFixed(0)}&nbsp;€
                 </p>
+                {isPaid ? (
+                  <Badge className="border-transparent bg-success/10 text-success">
+                    Payée
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    En attente
+                  </Badge>
+                )}
                 <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
+                {isPaid && (
+                  <Button asChild variant="outline" size="sm" className="gap-1.5">
+                    <a
+                      href={`/reservations/${res.id}/invoice`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Télécharger la facture de ${res.customer_name}`}
+                    >
+                      <FileText className="h-4 w-4" aria-hidden="true" />
+                      Facture
+                    </a>
+                  </Button>
+                )}
+                {!isPaid && res.status !== "cancelled" && (
+                  <CashPaymentDialog
+                    reservationId={res.id}
+                    customerName={res.customer_name}
+                    totalPrice={res.total_price}
+                  />
+                )}
               </div>
             </div>
           );

@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/features/dashboard/components/sidebar";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -50,6 +51,8 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+
+      <Toaster />
     </div>
   );
 }

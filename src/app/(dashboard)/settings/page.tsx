@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -6,11 +5,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { EditShopForm } from "@/features/dashboard/components/edit-shop-form";
+import { StripeConnectCard } from "@/features/payments/components/stripe-connect-card";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function SettingsPage() {
+type Props = {
+  searchParams: Promise<{ stripe?: string }>;
+};
+
+export default async function SettingsPage({ searchParams }: Props) {
+  const { stripe } = await searchParams;
+  const stripeNotice =
+    stripe === "success" || stripe === "refresh" ? stripe : null;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -59,44 +66,39 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Profile + Stripe info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-h3">Compte</CardTitle>
-            <CardDescription>Vos informations</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm text-muted-foreground">Email</span>
-              <span className="text-sm font-medium">{user?.email}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm text-muted-foreground">Prénom</span>
-              <span className="text-sm font-medium">
-                {profile?.first_name || "—"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm text-muted-foreground">Nom</span>
-              <span className="text-sm font-medium">
-                {profile?.last_name || "—"}
-              </span>
-            </div>
+        <div className="space-y-6">
+          {/* Profile */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-h3">Compte</CardTitle>
+              <CardDescription>Vos informations</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-body-sm text-muted-foreground">Email</span>
+                <span className="text-sm font-medium">{user?.email}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-body-sm text-muted-foreground">Prénom</span>
+                <span className="text-sm font-medium">
+                  {profile?.first_name || "—"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-body-sm text-muted-foreground">Nom</span>
+                <span className="text-sm font-medium">
+                  {profile?.last_name || "—"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <span className="text-body-sm text-muted-foreground">
-                Stripe Connect
-              </span>
-              {stripeAccount?.charges_enabled ? (
-                <Badge variant="default">Paiements actifs</Badge>
-              ) : (
-                <Badge variant="outline">Non configuré</Badge>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          {/* Stripe Connect onboarding */}
+          <StripeConnectCard
+            account={stripeAccount ?? null}
+            notice={stripeNotice}
+          />
+        </div>
       </div>
     </div>
   );
