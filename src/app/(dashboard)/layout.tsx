@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar } from "@/features/dashboard/components/sidebar";
+import { SubscriptionBanner } from "@/features/subscriptions/components/subscription-banner";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -33,6 +34,12 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status, trial_ends_at")
+    .eq("shop_id", profile?.shop_id ?? "")
+    .single();
+
   const userName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
     user.email?.split("@")[0] ||
@@ -48,6 +55,13 @@ export default async function DashboardLayout({
 
       <main className="min-h-screen pt-16 lg:pl-64 lg:pt-0">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {subscription && (
+            <SubscriptionBanner
+              status={subscription.status}
+              trialEndsAt={subscription.trial_ends_at}
+              canManage={profile?.role !== "employee"}
+            />
+          )}
           {children}
         </div>
       </main>
