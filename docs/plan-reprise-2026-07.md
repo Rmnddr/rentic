@@ -108,3 +108,15 @@ Autre correctif : `CardTitle` rendait un `<div>`, donc les pages publiques (conn
 **Total estimé : 8 à 12 jours** pour un produit démontrable à un premier loueur pilote (boucle complète : site en ligne → résa web → paiement → dashboard).
 
 Ordre de reprise recommandé : 0 → 1 → 2 (le tunnel est prioritaire ; les phases 3 et 4 peuvent suivre le premier retour terrain).
+
+---
+
+## Reste à faire après les phases 0 → 4
+
+| Sujet | Bloqué par | Détail |
+|-------|-----------|--------|
+| **Envoi réel des emails** | 🔒 domaine à acquérir | Resend exige un domaine vérifié par DNS. Le code est prêt et inoffensif sans clé (`skipped` en base). Procédure : voir `CLAUDE.local.md`. |
+| Story 8-5 — activation/désactivation d'un employé | — | Le toggle est un placeholder : il manque une colonne `is_active` sur `profiles` (migration + action + UI). |
+| Story 9-4 — journalisation | — | Sentry est câblé, mais pas de logger structuré ni de correlation id (attendu par la skill `ncf-backend`). |
+| `src/types/database.ts` obsolète | — | Ne contient ni `subscriptions`, ni `payments`, ni `platform_admins`, ni les vues. À régénérer depuis Supabase et à brancher sur les clients (typage de bout en bout). |
+| Déploiement | — | Jamais déployé. Vercel + variables d'env ; une URL `*.vercel.app` suffit pour un pilote, le domaine peut venir après. |

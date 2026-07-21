@@ -30,6 +30,22 @@ stripe listen --api-key "$SK" --forward-to localhost:3000/api/webhooks/stripe-co
 ```
 Remplacer temporairement `STRIPE_WEBHOOK_SECRET_CONNECT` par le secret rendu par `stripe listen --print-secret` (la valeur en place vient du dashboard, pour le déploiement).
 
+### Resend (emails) — EN ATTENTE DU DOMAINE
+L'envoi réel est bloqué tant qu'il n'y a pas de domaine : Resend exige un
+domaine vérifié par DNS pour expédier autrement qu'en test.
+
+En attendant, `sendEmail()` (`src/lib/email/send.ts`) ne casse rien : il logue
+un avertissement et écrit une ligne `email_logs` en statut `skipped`. Aucun
+code appelant n'est à modifier.
+
+Quand le domaine sera là :
+1. Ajouter le domaine dans Resend, poser les DNS (SPF/DKIM), attendre la vérification
+2. Renseigner `RESEND_API_KEY` dans `.env.local` (et chez l'hébergeur)
+3. Ajuster l'expéditeur si besoin — actuellement `Rentic <noreply@rentic.fr>` en dur dans `src/lib/email/send.ts`
+4. Vérifier : une réservation web doit produire une ligne `email_logs` en `sent` (et non `skipped`)
+
+Emails déjà branchés : confirmation de réservation (tunnel) et invitation employé.
+
 ## Conventions métier
 
 - Catalogue EAV : attributs produit ET participant personnalisables par catégorie (pointure pour le ski, poids pour le paddle)
