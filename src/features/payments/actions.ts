@@ -1,26 +1,34 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe/config";
+import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { parseFormData, parseInput } from "@/lib/schemas/parse";
+import {
+  createPaymentIntentSchema,
+  recordCashPaymentSchema,
+} from "@/lib/schemas/payments";
+import { getStripe } from "@/lib/stripe/config";
+import { env } from "@/lib/env";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// getStripe() est appelé APRÈS l'auth : pas d'instanciation du client Stripe
+// pour un appelant non authentifié.
+
 // ── Stripe Connect Onboarding ────────────────────────────
 
 export async function createStripeConnectAction(): Promise<ActionResult<{ url: string }>> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const stripe = getStripe();
 
-  // Check if account already exists
-  const { data: existing } = await supabase
+  // Vérifie si un compte Connect existe déjà pour ce magasin.
+  const { data: existing } = await auth.supabase
     .from("shop_stripe_accounts")
     .select("stripe_account_id")
-    .eq("shop_id", shopId)
+    .eq("shop_id", auth.shopId)
     .single();
 
   let accountId: string;
@@ -28,7 +36,7 @@ export async function createStripeConnectAction(): Promise<ActionResult<{ url: s
   if (existing?.stripe_account_id) {
     accountId = existing.stripe_account_id;
   } else {
-    // Create Express account
+    // Crée un compte Express.
     const account = await stripe.accounts.create({
       type: "express",
       country: "FR",
@@ -36,22 +44,24 @@ export async function createStripeConnectAction(): Promise<ActionResult<{ url: s
         card_payments: { requested: true },
         transfers: { requested: true },
       },
-      metadata: { shop_id: shopId },
+      metadata: { shop_id: auth.shopId },
     });
 
     accountId = account.id;
 
-    await supabase.from("shop_stripe_accounts").insert({
-      shop_id: shopId,
+    const { error } = await auth.supabase.from("shop_stripe_accounts").insert({
+      shop_id: auth.shopId,
       stripe_account_id: accountId,
     });
+
+    if (error) return { success: false, error: error.message };
   }
 
-  // Create onboarding link
+  // Crée le lien d'onboarding.
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
-    refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?stripe=refresh`,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?stripe=success`,
+    refresh_url: `${env.NEXT_PUBLIC_APP_URL}/settings?stripe=refresh`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/settings?stripe=success`,
     type: "account_onboarding",
   });
 
@@ -64,18 +74,24 @@ export async function createPaymentIntentAction(
   reservationId: string,
   amount: number,
 ): Promise<ActionResult<{ clientSecret: string }>> {
-  const supabase = await createClient();
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  // Get shop's Stripe account
-  const { data: reservation } = await supabase
+  const parsed = parseInput(createPaymentIntentSchema, { reservationId, amount });
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+
+  // Récupère le compte Stripe du magasin de la réservation.
+  const { data: reservation } = await auth.supabase
     .from("reservations")
     .select("shop_id")
-    .eq("id", reservationId)
+    .eq("id", parsed.data.reservationId)
     .single();
 
   if (!reservation) return { success: false, error: "Réservation introuvable." };
 
-  const { data: stripeAccount } = await supabase
+  const { data: stripeAccount } = await auth.supabase
     .from("shop_stripe_accounts")
     .select("stripe_account_id, charges_enabled")
     .eq("shop_id", reservation.shop_id)
@@ -85,30 +101,36 @@ export async function createPaymentIntentAction(
     return { success: false, error: "Le loueur n'a pas encore activé les paiements." };
   }
 
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount,
+  const paymentIntent = await getStripe().paymentIntents.create({
+    amount: parsed.data.amount,
     currency: "eur",
     transfer_data: {
       destination: stripeAccount.stripe_account_id,
     },
     metadata: {
-      reservation_id: reservationId,
+      reservation_id: parsed.data.reservationId,
       shop_id: reservation.shop_id,
     },
   });
 
-  // Record pending payment
-  await supabase.from("payments").insert({
-    reservation_id: reservationId,
+  if (!paymentIntent.client_secret) {
+    return { success: false, error: "Impossible d'initialiser le paiement." };
+  }
+
+  // Enregistre le paiement en attente.
+  const { error } = await auth.supabase.from("payments").insert({
+    reservation_id: parsed.data.reservationId,
     stripe_payment_intent_id: paymentIntent.id,
-    amount,
+    amount: parsed.data.amount,
     status: "pending",
     method: "card",
   });
 
+  if (error) return { success: false, error: error.message };
+
   return {
     success: true,
-    data: { clientSecret: paymentIntent.client_secret! },
+    data: { clientSecret: paymentIntent.client_secret },
   };
 }
 
@@ -117,21 +139,23 @@ export async function createPaymentIntentAction(
 export async function recordCashPaymentAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const reservationId = formData.get("reservationId") as string;
-  const amount = parseInt(formData.get("amount") as string) || 0;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!reservationId || amount <= 0) {
-    return { success: false, error: "Réservation et montant requis." };
+  const parsed = parseFormData(recordCashPaymentSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { reservationId, amount } = parsed.data;
 
-  const supabase = await createClient();
-
-  await supabase.from("payments").insert({
+  const { error } = await auth.supabase.from("payments").insert({
     reservation_id: reservationId,
     amount,
     status: "succeeded",
     method: "cash",
   });
+
+  if (error) return { success: false, error: error.message };
 
   revalidatePath("/reservations");
   return { success: true, data: null };

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseInput } from "@/lib/schemas/parse";
+import { createWebReservationSchema } from "@/lib/schemas/tunnel";
 import type { ActionResult } from "@/types/global";
 
 type TunnelItem = {
@@ -17,6 +19,13 @@ type ParticipantValue = {
   participantIndex: number;
 };
 
+// Ordre NCF : VALIDATION → VÉRIFICATION → OPÉRATION.
+//
+// ACTION PUBLIQUE PAR DESIGN : le tunnel de réservation est utilisé par le
+// client final du magasin, qui n'est PAS authentifié. Pas de requireAuth ici —
+// la validation Zod stricte (shopId UUID, bornes sur chaque champ) et les
+// politiques RLS côté base constituent les seules barrières.
+
 export async function createWebReservationAction(data: {
   shopId: string;
   customerName: string;
@@ -28,48 +37,44 @@ export async function createWebReservationAction(data: {
   participantValues: ParticipantValue[];
   acceptCgv: boolean;
 }): Promise<ActionResult<{ reservationId: string }>> {
-  if (!data.acceptCgv) {
-    return { success: false, error: "Vous devez accepter les conditions générales." };
+  const parsed = parseInput(createWebReservationSchema, data);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-
-  if (!data.customerName || !data.customerEmail || !data.startDate || !data.endDate) {
-    return { success: false, error: "Informations incomplètes." };
-  }
-
-  if (data.items.length === 0) {
-    return { success: false, error: "Panier vide." };
-  }
+  const input = parsed.data;
 
   const supabase = await createClient();
 
-  // Verify availability
-  for (const item of data.items) {
+  // VÉRIFICATION : disponibilité de chaque produit sur la période.
+  for (const item of input.items) {
     const { data: available } = await supabase.rpc("check_availability", {
       p_product_id: item.productId,
-      p_start_date: data.startDate,
-      p_end_date: data.endDate,
+      p_start_date: input.startDate,
+      p_end_date: input.endDate,
     });
 
     if ((available ?? 0) < item.quantity) {
-      return { success: false, error: "Un ou plusieurs produits ne sont plus disponibles." };
+      return {
+        success: false,
+        error: "Un ou plusieurs produits ne sont plus disponibles.",
+      };
     }
   }
 
-  const totalPrice = data.items.reduce(
+  const totalPrice = input.items.reduce(
     (sum, i) => sum + i.unitPrice * i.quantity,
     0,
   );
 
-  // Create reservation
   const { data: reservation, error: resError } = await supabase
     .from("reservations")
     .insert({
-      shop_id: data.shopId,
-      customer_name: data.customerName,
-      customer_email: data.customerEmail,
-      customer_phone: data.customerPhone,
-      start_date: data.startDate,
-      end_date: data.endDate,
+      shop_id: input.shopId,
+      customer_name: input.customerName,
+      customer_email: input.customerEmail,
+      customer_phone: input.customerPhone || null,
+      start_date: input.startDate,
+      end_date: input.endDate,
       source: "web",
       total_price: totalPrice,
     })
@@ -78,8 +83,7 @@ export async function createWebReservationAction(data: {
 
   if (resError) return { success: false, error: resError.message };
 
-  // Create items and assign units
-  for (const item of data.items) {
+  for (const item of input.items) {
     const { data: resItem, error: itemError } = await supabase
       .from("reservation_items")
       .insert({
@@ -95,7 +99,7 @@ export async function createWebReservationAction(data: {
 
     if (itemError) return { success: false, error: itemError.message };
 
-    // Auto-assign units
+    // Assignation automatique des unités disponibles.
     const { data: units } = await supabase
       .from("product_units")
       .select("id")
@@ -112,11 +116,8 @@ export async function createWebReservationAction(data: {
       }
     }
 
-    // Save participant attribute values
-    const itemParticipantValues = data.participantValues.filter(
-      (pv) => pv.attributeId,
-    );
-    for (const pv of itemParticipantValues) {
+    // Valeurs d'attributs des participants (déjà validées par Zod).
+    for (const pv of input.participantValues) {
       await supabase.from("participant_attribute_values").insert({
         reservation_item_id: resItem.id,
         category_attribute_id: pv.attributeId,

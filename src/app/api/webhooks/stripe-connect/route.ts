@@ -1,4 +1,6 @@
-import { stripe } from "@/lib/stripe/config";
+import type Stripe from "stripe";
+import { getStripe } from "@/lib/stripe/config";
+import { requireEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -6,16 +8,18 @@ export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
-  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET_CONNECT) {
+  if (!signature) {
     return NextResponse.json({ error: "Missing signature" }, { status: 401 });
   }
 
-  let event;
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
+    // requireEnv jette si le secret est absent → capturé ci-dessous en 401,
+    // même comportement que l'ancien guard sur process.env.
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET_CONNECT,
+      requireEnv("STRIPE_WEBHOOK_SECRET_CONNECT"),
     );
   } catch {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });

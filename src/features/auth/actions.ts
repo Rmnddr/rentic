@@ -1,28 +1,22 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseFormData } from "@/lib/schemas/parse";
+import { signInSchema, signUpSchema } from "@/lib/schemas/auth";
 import type { ActionResult } from "@/types/global";
 import { redirect } from "next/navigation";
+
+// Actions PUBLIQUES (signup/login/logout) : pas de requireAuth — l'ordre NCF
+// se réduit ici à VALIDATION → OPÉRATION.
 
 export async function signUpAction(
   formData: FormData,
 ): Promise<ActionResult<{ message: string }>> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { success: false, error: "Email et mot de passe requis." };
+  const parsed = parseFormData(signUpSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-
-  if (password.length < 8) {
-    return {
-      success: false,
-      error: "Le mot de passe doit contenir au moins 8 caractères.",
-      fieldErrors: {
-        password: ["Le mot de passe doit contenir au moins 8 caractères."],
-      },
-    };
-  }
+  const { email, password } = parsed.data;
 
   const supabase = await createClient();
 
@@ -49,12 +43,11 @@ export async function signUpAction(
 export async function signInAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { success: false, error: "Email et mot de passe requis." };
+  const parsed = parseFormData(signInSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { email, password } = parsed.data;
 
   const supabase = await createClient();
 

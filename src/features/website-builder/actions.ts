@@ -1,35 +1,51 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import { updateCgvSchema, updateWebsiteSchema } from "@/lib/schemas/website";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
+
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// L'isolation tenant est garantie par RLS (shop_id = get_user_shop_id()).
 
 export async function updateWebsiteAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const heroTitle = formData.get("heroTitle") as string;
-  const heroSubtitle = formData.get("heroSubtitle") as string;
-  const heroImageUrl = formData.get("heroImageUrl") as string;
-  const sectionsJson = formData.get("sections") as string;
-  const isPublished = formData.get("isPublished") === "true";
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const parsed = parseFormData(updateWebsiteSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { heroTitle, heroSubtitle, heroImageUrl, sections: sectionsJson, isPublished } =
+    parsed.data;
 
-  let sections;
+  let sections: unknown;
   try {
     sections = sectionsJson ? JSON.parse(sectionsJson) : [];
   } catch {
-    return { success: false, error: "Format des sections invalide." };
+    return {
+      success: false,
+      error: "Format des sections invalide.",
+      fieldErrors: { sections: ["Format des sections invalide."] },
+    };
+  }
+  if (!Array.isArray(sections)) {
+    return {
+      success: false,
+      error: "Format des sections invalide.",
+      fieldErrors: { sections: ["Format des sections invalide."] },
+    };
   }
 
   // Upsert website config
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("shop_websites")
     .upsert(
       {
-        shop_id: shopId,
+        shop_id: auth.shopId,
         hero_title: heroTitle,
         hero_subtitle: heroSubtitle,
         hero_image_url: heroImageUrl,
@@ -42,10 +58,10 @@ export async function updateWebsiteAction(
   if (error) return { success: false, error: error.message };
 
   // Revalidate public pages
-  const { data: shop } = await supabase
+  const { data: shop } = await auth.supabase
     .from("shops")
     .select("slug")
-    .eq("id", shopId)
+    .eq("id", auth.shopId)
     .single();
 
   if (shop?.slug) {
@@ -59,16 +75,18 @@ export async function updateWebsiteAction(
 export async function updateCgvAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const cgvContent = formData.get("cgvContent") as string;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const parsed = parseFormData(updateCgvSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
 
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("shop_websites")
     .upsert(
-      { shop_id: shopId, cgv_content: cgvContent },
+      { shop_id: auth.shopId, cgv_content: parsed.data.cgvContent },
       { onConflict: "shop_id" },
     );
 

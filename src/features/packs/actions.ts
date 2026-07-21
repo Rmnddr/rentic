@@ -1,48 +1,30 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import { deleteByIdSchema } from "@/lib/schemas/catalog";
+import { createPackSchema, updatePackSchema } from "@/lib/schemas/packs";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
 
-type PackItemInput = {
-  productId: string;
-  isRequired: boolean;
-  priceWebOverride: number | null;
-  priceShopOverride: number | null;
-  position: number;
-};
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// L'isolation tenant est garantie par RLS (shop_id = get_user_shop_id()).
 
 export async function createPackAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-  const itemsJson = formData.get("items") as string;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!name) return { success: false, error: "Nom du pack requis." };
-
-  let items: PackItemInput[];
-  try {
-    items = JSON.parse(itemsJson || "[]");
-  } catch {
-    return { success: false, error: "Format des items invalide." };
+  const parsed = parseFormData(createPackSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { name, description, items } = parsed.data;
 
-  if (items.length < 2) {
-    return { success: false, error: "Un pack doit contenir au moins 2 produits." };
-  }
-
-  if (!items.some((i) => i.isRequired)) {
-    return { success: false, error: "Un pack doit contenir au moins un produit obligatoire." };
-  }
-
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
-
-  const { data: pack, error: packError } = await supabase
+  const { data: pack, error: packError } = await auth.supabase
     .from("packs")
-    .insert({ shop_id: shopId, name, description })
+    .insert({ shop_id: auth.shopId, name, description })
     .select("id")
     .single();
 
@@ -57,7 +39,7 @@ export async function createPackAction(
     position: item.position,
   }));
 
-  const { error: itemsError } = await supabase
+  const { error: itemsError } = await auth.supabase
     .from("pack_items")
     .insert(packItems);
 
@@ -70,39 +52,24 @@ export async function createPackAction(
 export async function updatePackAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-  const itemsJson = formData.get("items") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!id || !name) return { success: false, error: "Données manquantes." };
-
-  let items: PackItemInput[];
-  try {
-    items = JSON.parse(itemsJson || "[]");
-  } catch {
-    return { success: false, error: "Format des items invalide." };
+  const parsed = parseFormData(updatePackSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { id, name, description, items } = parsed.data;
 
-  if (items.length < 2) {
-    return { success: false, error: "Un pack doit contenir au moins 2 produits." };
-  }
-
-  if (!items.some((i) => i.isRequired)) {
-    return { success: false, error: "Un pack doit contenir au moins un produit obligatoire." };
-  }
-
-  const supabase = await createClient();
-
-  const { error: packError } = await supabase
+  const { error: packError } = await auth.supabase
     .from("packs")
     .update({ name, description })
     .eq("id", id);
 
   if (packError) return { success: false, error: packError.message };
 
-  // Replace all pack items
-  await supabase.from("pack_items").delete().eq("pack_id", id);
+  // Remplacement complet des items du pack.
+  await auth.supabase.from("pack_items").delete().eq("pack_id", id);
 
   const packItems = items.map((item) => ({
     pack_id: id,
@@ -113,7 +80,7 @@ export async function updatePackAction(
     position: item.position,
   }));
 
-  const { error: itemsError } = await supabase
+  const { error: itemsError } = await auth.supabase
     .from("pack_items")
     .insert(packItems);
 
@@ -126,11 +93,16 @@ export async function updatePackAction(
 export async function deletePackAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("packs").delete().eq("id", id);
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+
+  const { error } = await auth.supabase
+    .from("packs")
+    .delete()
+    .eq("id", parsed.data.id);
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/packs");

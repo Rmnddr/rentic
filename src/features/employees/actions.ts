@@ -1,33 +1,37 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import {
+  inviteEmployeeSchema,
+  toggleEmployeeStatusSchema,
+} from "@/lib/schemas/employees";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
+
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// L'isolation tenant est garantie par RLS (shop_id = get_user_shop_id()).
 
 export async function inviteEmployeeAction(
   formData: FormData,
 ): Promise<ActionResult<{ token: string }>> {
-  const email = formData.get("email") as string;
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!email) return { success: false, error: "Email requis." };
+  const parsed = parseFormData(inviteEmployeeSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { email, firstName, lastName } = parsed.data;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
-
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
-
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("invitations")
     .insert({
-      shop_id: shopId,
+      shop_id: auth.shopId,
       email,
       first_name: firstName,
       last_name: lastName,
-      invited_by: user.id,
+      invited_by: auth.user.id,
     })
     .select("token")
     .single();
@@ -43,15 +47,17 @@ export async function inviteEmployeeAction(
 export async function toggleEmployeeStatusAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const profileId = formData.get("profileId") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!profileId) return { success: false, error: "ID manquant." };
-
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const parsed = parseFormData(toggleEmployeeStatusSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { profileId } = parsed.data;
 
   // Prevent self-deactivation
-  if (profileId === user?.id) {
+  if (profileId === auth.user.id) {
     return { success: false, error: "Vous ne pouvez pas vous désactiver vous-même." };
   }
 

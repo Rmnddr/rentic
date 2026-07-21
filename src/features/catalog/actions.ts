@@ -1,26 +1,41 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import {
+  createAttributeSchema,
+  createBrandSchema,
+  createCategorySchema,
+  createProductSchema,
+  createUnitSchema,
+  deleteByIdSchema,
+  updateCategorySchema,
+  updateProductSchema,
+  updateUnitSchema,
+} from "@/lib/schemas/catalog";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
+
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// L'isolation tenant est garantie par RLS (shop_id = get_user_shop_id()).
 
 // ── Categories ──────────────────────────────────────────
 
 export async function createCategoryAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const name = formData.get("name") as string;
-  const type = (formData.get("type") as string) || "product";
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!name) return { success: false, error: "Nom requis." };
+  const parsed = parseFormData(createCategorySchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { name, type } = parsed.data;
 
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
-
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("categories")
-    .insert({ shop_id: shopId, name, type })
+    .insert({ shop_id: auth.shopId, name, type })
     .select("id")
     .single();
 
@@ -32,14 +47,16 @@ export async function createCategoryAction(
 export async function updateCategoryAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
-  const type = formData.get("type") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!id || !name) return { success: false, error: "Données manquantes." };
+  const parsed = parseFormData(updateCategorySchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { id, name, type } = parsed.data;
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("categories")
     .update({ name, type })
     .eq("id", id);
@@ -52,13 +69,14 @@ export async function updateCategoryAction(
 export async function deleteCategoryAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+  const { id } = parsed.data;
 
-  // Check for associated products
-  const { count } = await supabase
+  const { count } = await auth.supabase
     .from("products")
     .select("id", { count: "exact", head: true })
     .eq("category_id", id);
@@ -70,7 +88,7 @@ export async function deleteCategoryAction(
     };
   }
 
-  const { error } = await supabase.from("categories").delete().eq("id", id);
+  const { error } = await auth.supabase.from("categories").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
   revalidatePath("/catalog");
   return { success: true, data: null };
@@ -81,21 +99,21 @@ export async function deleteCategoryAction(
 export async function createAttributeAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const categoryId = formData.get("categoryId") as string;
-  const name = formData.get("name") as string;
-  const scope = (formData.get("scope") as string) || "product";
-  const format = (formData.get("format") as string) || "text";
-  const optionsRaw = formData.get("options") as string;
-  const required = formData.get("required") === "true";
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!categoryId || !name) return { success: false, error: "Données manquantes." };
+  const parsed = parseFormData(createAttributeSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { categoryId, name, scope, format, options: optionsRaw, required } = parsed.data;
 
-  const options = format === "select" && optionsRaw
-    ? optionsRaw.split(",").map((o) => o.trim()).filter(Boolean)
-    : null;
+  const options =
+    format === "select" && optionsRaw
+      ? optionsRaw.split(",").map((o) => o.trim()).filter(Boolean)
+      : null;
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("category_attributes")
     .insert({ category_id: categoryId, name, scope, format, options, required })
     .select("id")
@@ -109,13 +127,14 @@ export async function createAttributeAction(
 export async function deleteAttributeAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+  const { id } = parsed.data;
 
-  // Check for associated values
-  const { count } = await supabase
+  const { count } = await auth.supabase
     .from("product_attribute_values")
     .select("id", { count: "exact", head: true })
     .eq("attribute_id", id);
@@ -127,7 +146,10 @@ export async function deleteAttributeAction(
     };
   }
 
-  const { error } = await supabase.from("category_attributes").delete().eq("id", id);
+  const { error } = await auth.supabase
+    .from("category_attributes")
+    .delete()
+    .eq("id", id);
   if (error) return { success: false, error: error.message };
   revalidatePath("/catalog");
   return { success: true, data: null };
@@ -138,23 +160,19 @@ export async function deleteAttributeAction(
 export async function createProductAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const name = formData.get("name") as string;
-  const categoryId = formData.get("categoryId") as string;
-  const description = formData.get("description") as string;
-  const priceWeb = parseInt(formData.get("priceWeb") as string) || 0;
-  const priceShop = parseInt(formData.get("priceShop") as string) || 0;
-  const brandId = (formData.get("brandId") as string) || null;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!name || !categoryId) return { success: false, error: "Nom et catégorie requis." };
+  const parsed = parseFormData(createProductSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { name, categoryId, description, priceWeb, priceShop, brandId } = parsed.data;
 
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
-
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("products")
     .insert({
-      shop_id: shopId,
+      shop_id: auth.shopId,
       category_id: categoryId,
       brand_id: brandId || null,
       name,
@@ -173,19 +191,24 @@ export async function createProductAction(
 export async function updateProductAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-  const priceWeb = parseInt(formData.get("priceWeb") as string) || 0;
-  const priceShop = parseInt(formData.get("priceShop") as string) || 0;
-  const brandId = (formData.get("brandId") as string) || null;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!id || !name) return { success: false, error: "Données manquantes." };
+  const parsed = parseFormData(updateProductSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { id, name, description, priceWeb, priceShop, brandId } = parsed.data;
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("products")
-    .update({ name, description, price_web: priceWeb, price_shop: priceShop, brand_id: brandId || null })
+    .update({
+      name,
+      description,
+      price_web: priceWeb,
+      price_shop: priceShop,
+      brand_id: brandId || null,
+    })
     .eq("id", id);
 
   if (error) return { success: false, error: error.message };
@@ -196,11 +219,16 @@ export async function updateProductAction(
 export async function deleteProductAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+
+  const { error } = await auth.supabase
+    .from("products")
+    .delete()
+    .eq("id", parsed.data.id);
   if (error) return { success: false, error: error.message };
   revalidatePath("/catalog");
   return { success: true, data: null };
@@ -211,13 +239,16 @@ export async function deleteProductAction(
 export async function createUnitAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const productId = formData.get("productId") as string;
-  const label = formData.get("label") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!productId || !label) return { success: false, error: "Données manquantes." };
+  const parsed = parseFormData(createUnitSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { productId, label } = parsed.data;
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("product_units")
     .insert({ product_id: productId, label })
     .select("id")
@@ -231,14 +262,16 @@ export async function createUnitAction(
 export async function updateUnitAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  const label = formData.get("label") as string;
-  const status = formData.get("status") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!id) return { success: false, error: "ID manquant." };
+  const parsed = parseFormData(updateUnitSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { id, label, status } = parsed.data;
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("product_units")
     .update({ label, status })
     .eq("id", id);
@@ -251,11 +284,16 @@ export async function updateUnitAction(
 export async function deleteUnitAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("product_units").delete().eq("id", id);
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+
+  const { error } = await auth.supabase
+    .from("product_units")
+    .delete()
+    .eq("id", parsed.data.id);
   if (error) return { success: false, error: error.message };
   revalidatePath("/catalog");
   return { success: true, data: null };
@@ -266,16 +304,17 @@ export async function deleteUnitAction(
 export async function createBrandAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const name = formData.get("name") as string;
-  if (!name) return { success: false, error: "Nom requis." };
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const parsed = parseFormData(createBrandSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
 
-  const { data, error } = await supabase
+  const { data, error } = await auth.supabase
     .from("brands")
-    .insert({ shop_id: shopId, name })
+    .insert({ shop_id: auth.shopId, name: parsed.data.name })
     .select("id")
     .single();
 
@@ -287,12 +326,14 @@ export async function createBrandAction(
 export async function deleteBrandAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  if (!id) return { success: false, error: "ID manquant." };
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const supabase = await createClient();
+  const parsed = parseFormData(deleteByIdSchema, formData);
+  if (!parsed.ok) return { success: false, error: parsed.error };
+  const { id } = parsed.data;
 
-  const { count } = await supabase
+  const { count } = await auth.supabase
     .from("products")
     .select("id", { count: "exact", head: true })
     .eq("brand_id", id);
@@ -304,7 +345,7 @@ export async function deleteBrandAction(
     };
   }
 
-  const { error } = await supabase.from("brands").delete().eq("id", id);
+  const { error } = await auth.supabase.from("brands").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
   revalidatePath("/catalog");
   return { success: true, data: null };

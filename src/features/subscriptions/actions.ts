@@ -1,79 +1,90 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe/config";
+import { requireShop } from "@/lib/supabase/auth";
+import { parseInput } from "@/lib/schemas/parse";
+import { checkoutPlanSchema } from "@/lib/schemas/subscriptions";
+import { getStripe } from "@/lib/stripe/config";
+import { env, requireEnv } from "@/lib/env";
 import type { ActionResult } from "@/types/global";
 import { redirect } from "next/navigation";
 
-const PLANS = {
-  season: { priceId: process.env.STRIPE_PRICE_SEASON!, name: "Saison", amount: 45000 },
-  annual: { priceId: process.env.STRIPE_PRICE_ANNUAL!, name: "Annuel", amount: 79000 },
-} as const;
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// getStripe() est appelé APRÈS l'auth : pas d'instanciation du client Stripe
+// pour un appelant non authentifié.
 
 export async function createCheckoutSessionAction(
   plan: "season" | "annual",
 ): Promise<ActionResult<{ url: string }>> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const parsed = parseInput(checkoutPlanSchema, plan);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
 
-  // Get or create Stripe customer
-  const { data: subscription } = await supabase
+  const stripe = getStripe();
+  const priceId = requireEnv(
+    parsed.data === "season" ? "STRIPE_PRICE_SEASON" : "STRIPE_PRICE_ANNUAL",
+  );
+
+  // Récupère ou crée le customer Stripe du magasin.
+  const { data: subscription } = await auth.supabase
     .from("subscriptions")
     .select("stripe_customer_id")
-    .eq("shop_id", shopId)
+    .eq("shop_id", auth.shopId)
     .single();
 
   let customerId = subscription?.stripe_customer_id;
 
   if (!customerId) {
     const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { shop_id: shopId },
+      email: auth.user.email,
+      metadata: { shop_id: auth.shopId },
     });
     customerId = customer.id;
 
-    await supabase
+    const { error } = await auth.supabase
       .from("subscriptions")
       .update({ stripe_customer_id: customerId })
-      .eq("shop_id", shopId);
-  }
+      .eq("shop_id", auth.shopId);
 
-  const planConfig = PLANS[plan];
+    if (error) return { success: false, error: error.message };
+  }
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
-    line_items: [{ price: planConfig.priceId, quantity: 1 }],
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
-    metadata: { shop_id: shopId, plan },
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${env.NEXT_PUBLIC_APP_URL}/subscription?success=true`,
+    cancel_url: `${env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
+    metadata: { shop_id: auth.shopId, plan: parsed.data },
   });
 
-  redirect(session.url!);
+  if (!session.url) {
+    return { success: false, error: "Impossible de créer la session de paiement." };
+  }
+
+  redirect(session.url);
 }
 
 export async function createCustomerPortalAction(): Promise<ActionResult<{ url: string }>> {
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const { data: subscription } = await supabase
+  const { data: subscription } = await auth.supabase
     .from("subscriptions")
     .select("stripe_customer_id")
-    .eq("shop_id", shopId)
+    .eq("shop_id", auth.shopId)
     .single();
 
   if (!subscription?.stripe_customer_id) {
     return { success: false, error: "Aucun abonnement Stripe trouvé." };
   }
 
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/subscription`,
   });
 
   redirect(session.url);

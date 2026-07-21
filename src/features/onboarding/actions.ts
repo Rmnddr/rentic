@@ -1,80 +1,84 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import {
+  createFirstCategorySchema,
+  updateProfileSchema,
+  updateShopSchema,
+} from "@/lib/schemas/onboarding";
 import type { ActionResult } from "@/types/global";
 import { redirect } from "next/navigation";
+
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// Le shop est créé à l'inscription : requireShop() est donc sûr dès l'étape 1.
 
 export async function updateProfileAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
-  const phone = formData.get("phone") as string;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!firstName || !lastName) {
-    return { success: false, error: "Nom et prénom requis." };
+  const parsed = parseFormData(updateProfileSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { firstName, lastName, phone } = parsed.data;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
-
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("profiles")
     .update({
       first_name: firstName,
       last_name: lastName,
       onboarding_current_step: 2,
     })
-    .eq("id", user.id);
+    .eq("id", auth.user.id);
+
+  if (error) return { success: false, error: error.message };
 
   // Update shop phone if provided
   if (phone) {
-    await supabase
+    const { error: phoneError } = await auth.supabase
       .from("shops")
       .update({ phone })
-      .eq("id", (await supabase.from("profiles").select("shop_id").eq("id", user.id).single()).data?.shop_id ?? "");
+      .eq("id", auth.shopId);
+    if (phoneError) return { success: false, error: phoneError.message };
   }
 
-  if (error) return { success: false, error: error.message };
   return { success: true, data: null };
 }
 
 export async function updateShopAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const name = formData.get("shopName") as string;
-  const address = formData.get("address") as string;
-  const siret = formData.get("siret") as string;
-  const tvaNumber = formData.get("tvaNumber") as string;
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!name) {
-    return { success: false, error: "Nom du magasin requis." };
+  const parsed = parseFormData(updateShopSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { shopName, address, siret, tvaNumber, slug } = parsed.data;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
+  const update: Record<string, string> = {
+    name: shopName,
+    address,
+    siret,
+    tva_number: tvaNumber,
+  };
+  if (slug) update.slug = slug;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("shop_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.shop_id) return { success: false, error: "Shop introuvable." };
-
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("shops")
-    .update({ name, address, siret, tva_number: tvaNumber })
-    .eq("id", profile.shop_id);
+    .update(update)
+    .eq("id", auth.shopId);
 
   if (error) return { success: false, error: error.message };
 
-  await supabase
+  await auth.supabase
     .from("profiles")
     .update({ onboarding_current_step: 3 })
-    .eq("id", user.id);
+    .eq("id", auth.user.id);
 
   return { success: true, data: null };
 }
@@ -82,36 +86,26 @@ export async function updateShopAction(
 export async function createFirstCategoryAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const name = formData.get("categoryName") as string;
-  const type = (formData.get("categoryType") as string) || "product";
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!name) {
-    return { success: false, error: "Nom de la catégorie requis." };
+  const parsed = parseFormData(createFirstCategorySchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { categoryName, categoryType } = parsed.data;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Non authentifié." };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("shop_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.shop_id) return { success: false, error: "Shop introuvable." };
-
-  const { error: catError } = await supabase
+  const { error: catError } = await auth.supabase
     .from("categories")
-    .insert({ shop_id: profile.shop_id, name, type });
+    .insert({ shop_id: auth.shopId, name: categoryName, type: categoryType });
 
   if (catError) return { success: false, error: catError.message };
 
   // Mark onboarding as completed
-  await supabase
+  await auth.supabase
     .from("shops")
     .update({ onboarding_completed: true })
-    .eq("id", profile.shop_id);
+    .eq("id", auth.shopId);
 
   redirect("/dashboard");
 }

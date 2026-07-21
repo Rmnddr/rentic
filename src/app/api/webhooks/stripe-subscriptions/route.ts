@@ -1,4 +1,6 @@
-import { stripe } from "@/lib/stripe/config";
+import type Stripe from "stripe";
+import { getStripe } from "@/lib/stripe/config";
+import { requireEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -6,16 +8,18 @@ export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
-  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET_SUBSCRIPTIONS) {
+  if (!signature) {
     return NextResponse.json({ error: "Missing signature" }, { status: 401 });
   }
 
-  let event;
+  let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
+    // requireEnv jette si le secret est absent → capturé ci-dessous en 401,
+    // même comportement que l'ancien guard sur process.env.
+    event = getStripe().webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET_SUBSCRIPTIONS,
+      requireEnv("STRIPE_WEBHOOK_SECRET_SUBSCRIPTIONS"),
     );
   } catch {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
@@ -49,6 +53,8 @@ export async function POST(request: Request) {
         await supabase
           .from("subscriptions")
           .update({
+            // EXCEPTION-TYPECAST: le SDK type subscription/customer en
+            // `string | Stripe.Subscription | null` ; le webhook livre l'id string.
             stripe_subscription_id: session.subscription as string,
             stripe_customer_id: session.customer as string,
             plan: plan || "season",
@@ -60,6 +66,9 @@ export async function POST(request: Request) {
     }
 
     case "invoice.payment_succeeded": {
+      // EXCEPTION-TYPECAST: les types du SDK (API basil) n'exposent plus
+      // subscription/period_* sur l'objet racine ; accès dynamique aux champs
+      // legacy du payload webhook.
       const invoice = event.data.object as unknown as Record<string, unknown>;
       if (invoice.subscription) {
         await supabase
@@ -75,6 +84,7 @@ export async function POST(request: Request) {
     }
 
     case "invoice.payment_failed": {
+      // EXCEPTION-TYPECAST: idem invoice.payment_succeeded — champs legacy.
       const invoice = event.data.object as unknown as Record<string, unknown>;
       if (invoice.subscription) {
         await supabase
@@ -95,6 +105,8 @@ export async function POST(request: Request) {
     }
 
     case "customer.subscription.updated": {
+      // EXCEPTION-TYPECAST: current_period_* ne sont plus typés sur l'objet
+      // racine dans le SDK (API basil) ; accès dynamique au payload webhook.
       const subscription = event.data.object as unknown as Record<string, unknown>;
       await supabase
         .from("subscriptions")

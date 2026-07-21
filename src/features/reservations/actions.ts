@@ -1,50 +1,33 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { parseFormData } from "@/lib/schemas/parse";
+import {
+  createReservationSchema,
+  updateReservationStatusSchema,
+} from "@/lib/schemas/reservations";
 import type { ActionResult } from "@/types/global";
 import { revalidatePath } from "next/cache";
 
-type ReservationItemInput = {
-  productId: string;
-  packId?: string | null;
-  quantity: number;
-  unitPrice: number;
-  isOptional: boolean;
-};
+// Ordre NCF dans chaque action : AUTH → VALIDATION → VÉRIFICATION → OPÉRATION.
+// L'isolation tenant est garantie par RLS (shop_id = get_user_shop_id()).
 
 export async function createReservationAction(
   formData: FormData,
 ): Promise<ActionResult<{ id: string }>> {
-  const customerName = formData.get("customerName") as string;
-  const customerEmail = formData.get("customerEmail") as string;
-  const customerPhone = formData.get("customerPhone") as string;
-  const startDate = formData.get("startDate") as string;
-  const endDate = formData.get("endDate") as string;
-  const itemsJson = formData.get("items") as string;
-  const source = (formData.get("source") as string) || "back-office";
+  const auth = await requireShop();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!customerName || !startDate || !endDate) {
-    return { success: false, error: "Nom du client et dates requis." };
+  const parsed = parseFormData(createReservationSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
+  const { customerName, customerEmail, customerPhone, startDate, endDate, items, source } =
+    parsed.data;
 
-  let items: ReservationItemInput[];
-  try {
-    items = JSON.parse(itemsJson || "[]");
-  } catch {
-    return { success: false, error: "Format des items invalide." };
-  }
-
-  if (items.length === 0) {
-    return { success: false, error: "Au moins un produit requis." };
-  }
-
-  const supabase = await createClient();
-  const shopId = (await supabase.rpc("get_user_shop_id")).data;
-  if (!shopId) return { success: false, error: "Shop introuvable." };
-
-  // Check availability for each item
+  // VÉRIFICATION : disponibilité de chaque produit sur la période.
   for (const item of items) {
-    const { data: available } = await supabase.rpc("check_availability", {
+    const { data: available } = await auth.supabase.rpc("check_availability", {
       p_product_id: item.productId,
       p_start_date: startDate,
       p_end_date: endDate,
@@ -53,24 +36,20 @@ export async function createReservationAction(
     if ((available ?? 0) < item.quantity) {
       return {
         success: false,
-        error: `Stock insuffisant pour un des produits (${available} disponible(s), ${item.quantity} demandé(s)).`,
+        error: `Stock insuffisant pour un des produits (${available ?? 0} disponible(s), ${item.quantity} demandé(s)).`,
       };
     }
   }
 
-  const totalPrice = items.reduce(
-    (sum, i) => sum + i.unitPrice * i.quantity,
-    0,
-  );
+  const totalPrice = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
 
-  // Create reservation
-  const { data: reservation, error: resError } = await supabase
+  const { data: reservation, error: resError } = await auth.supabase
     .from("reservations")
     .insert({
-      shop_id: shopId,
+      shop_id: auth.shopId,
       customer_name: customerName,
-      customer_email: customerEmail,
-      customer_phone: customerPhone,
+      customer_email: customerEmail || null,
+      customer_phone: customerPhone || null,
       start_date: startDate,
       end_date: endDate,
       source,
@@ -81,9 +60,8 @@ export async function createReservationAction(
 
   if (resError) return { success: false, error: resError.message };
 
-  // Create reservation items
   for (const item of items) {
-    const { data: resItem, error: itemError } = await supabase
+    const { data: resItem, error: itemError } = await auth.supabase
       .from("reservation_items")
       .insert({
         reservation_id: reservation.id,
@@ -98,8 +76,8 @@ export async function createReservationAction(
 
     if (itemError) return { success: false, error: itemError.message };
 
-    // Auto-assign available units
-    const { data: availableUnits } = await supabase
+    // Assignation automatique des unités disponibles.
+    const { data: availableUnits } = await auth.supabase
       .from("product_units")
       .select("id")
       .eq("product_id", item.productId)
@@ -108,7 +86,7 @@ export async function createReservationAction(
 
     if (availableUnits) {
       for (const unit of availableUnits) {
-        await supabase.from("reservation_unit_assignments").insert({
+        await auth.supabase.from("reservation_unit_assignments").insert({
           reservation_item_id: resItem.id,
           product_unit_id: unit.id,
         });
@@ -123,15 +101,17 @@ export async function createReservationAction(
 export async function updateReservationStatusAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
-  const id = formData.get("id") as string;
-  const newStatus = formData.get("status") as string;
+  const auth = await requireAuth();
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  if (!id || !newStatus) return { success: false, error: "Données manquantes." };
+  const parsed = parseFormData(updateReservationStatusSchema, formData);
+  if (!parsed.ok) {
+    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
+  }
+  const { id, status: newStatus } = parsed.data;
 
-  const supabase = await createClient();
-
-  // Get current reservation
-  const { data: reservation } = await supabase
+  // VÉRIFICATION : la réservation existe et la transition est autorisée.
+  const { data: reservation } = await auth.supabase
     .from("reservations")
     .select("status")
     .eq("id", id)
@@ -139,7 +119,6 @@ export async function updateReservationStatusAction(
 
   if (!reservation) return { success: false, error: "Réservation introuvable." };
 
-  // Validate status transitions
   const validTransitions: Record<string, string[]> = {
     confirmed: ["in_progress", "cancelled"],
     in_progress: ["completed", "cancelled"],
@@ -159,7 +138,7 @@ export async function updateReservationStatusAction(
   if (newStatus === "completed") updates.completed_at = new Date().toISOString();
   if (newStatus === "cancelled") updates.cancelled_at = new Date().toISOString();
 
-  const { error } = await supabase
+  const { error } = await auth.supabase
     .from("reservations")
     .update(updates)
     .eq("id", id);
