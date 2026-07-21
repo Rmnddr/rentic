@@ -1,6 +1,9 @@
 "use server";
 
 import { requireAuth, requireShop } from "@/lib/supabase/auth";
+import { env } from "@/lib/env";
+import { sendEmail } from "@/lib/email/send";
+import { employeeInvitationHtml } from "@/lib/email/templates";
 import { parseFormData } from "@/lib/schemas/parse";
 import {
   inviteEmployeeSchema,
@@ -38,7 +41,27 @@ export async function inviteEmployeeAction(
 
   if (error) return { success: false, error: error.message };
 
-  // TODO: Send invitation email via Resend (Epic 6.5)
+  // Email d'invitation — effet NON critique, fire-and-forget : un échec
+  // d'envoi ne fait pas échouer l'invitation (le token reste partageable).
+  const { data: shop } = await auth.supabase
+    .from("shops")
+    .select("name")
+    .eq("id", auth.shopId)
+    .single<{ name: string }>();
+
+  const inviteUrl = `${env.NEXT_PUBLIC_APP_URL}/sign-up?invitation=${data.token}`;
+  void sendEmail({
+    to: email,
+    subject: `Invitation à rejoindre ${shop?.name ?? "l'équipe"} sur Rentic`,
+    html: employeeInvitationHtml({
+      shopName: shop?.name ?? "l'équipe",
+      inviteUrl,
+    }),
+    type: "employee_invitation",
+    shopId: auth.shopId,
+  }).catch(() => {
+    // silencieux — déjà tracé dans email_logs / console par sendEmail
+  });
 
   revalidatePath("/team");
   return { success: true, data: { token: data.token } };
