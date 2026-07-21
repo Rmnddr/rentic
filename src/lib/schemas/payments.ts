@@ -19,9 +19,10 @@ export const amountCentsSchema = z.coerce
   .int("Le montant doit être un nombre entier de centimes.")
   .min(1, "Le montant doit être supérieur à zéro.");
 
-export const createPaymentIntentSchema = z.object({
+// Paiement web (tunnel public) : uniquement l'id de réservation — le
+// montant est TOUJOURS relu en base, jamais accepté du client.
+export const createTunnelPaymentSchema = z.object({
   reservationId: uuidSchema,
-  amount: amountCentsSchema,
 });
 
 export const recordCashPaymentSchema = z.object({
@@ -29,5 +30,4 @@ export const recordCashPaymentSchema = z.object({
   amount: amountCentsSchema,
 });
 
-export type CreatePaymentIntentInput = z.infer<typeof createPaymentIntentSchema>;
 export type RecordCashPaymentInput = z.infer<typeof recordCashPaymentSchema>;

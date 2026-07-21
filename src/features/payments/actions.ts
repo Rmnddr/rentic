@@ -1,11 +1,8 @@
 "use server";
 
 import { requireAuth, requireShop } from "@/lib/supabase/auth";
-import { parseFormData, parseInput } from "@/lib/schemas/parse";
-import {
-  createPaymentIntentSchema,
-  recordCashPaymentSchema,
-} from "@/lib/schemas/payments";
+import { parseFormData } from "@/lib/schemas/parse";
+import { recordCashPaymentSchema } from "@/lib/schemas/payments";
 import { getStripe } from "@/lib/stripe/config";
 import { env } from "@/lib/env";
 import type { ActionResult } from "@/types/global";
@@ -68,71 +65,8 @@ export async function createStripeConnectAction(): Promise<ActionResult<{ url: s
   redirect(accountLink.url);
 }
 
-// ── Create Payment Intent (for web tunnel) ───────────────
-
-export async function createPaymentIntentAction(
-  reservationId: string,
-  amount: number,
-): Promise<ActionResult<{ clientSecret: string }>> {
-  const auth = await requireAuth();
-  if (!auth.ok) return { success: false, error: auth.error };
-
-  const parsed = parseInput(createPaymentIntentSchema, { reservationId, amount });
-  if (!parsed.ok) {
-    return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
-  }
-
-  // Récupère le compte Stripe du magasin de la réservation.
-  const { data: reservation } = await auth.supabase
-    .from("reservations")
-    .select("shop_id")
-    .eq("id", parsed.data.reservationId)
-    .single();
-
-  if (!reservation) return { success: false, error: "Réservation introuvable." };
-
-  const { data: stripeAccount } = await auth.supabase
-    .from("shop_stripe_accounts")
-    .select("stripe_account_id, charges_enabled")
-    .eq("shop_id", reservation.shop_id)
-    .single();
-
-  if (!stripeAccount?.charges_enabled) {
-    return { success: false, error: "Le loueur n'a pas encore activé les paiements." };
-  }
-
-  const paymentIntent = await getStripe().paymentIntents.create({
-    amount: parsed.data.amount,
-    currency: "eur",
-    transfer_data: {
-      destination: stripeAccount.stripe_account_id,
-    },
-    metadata: {
-      reservation_id: parsed.data.reservationId,
-      shop_id: reservation.shop_id,
-    },
-  });
-
-  if (!paymentIntent.client_secret) {
-    return { success: false, error: "Impossible d'initialiser le paiement." };
-  }
-
-  // Enregistre le paiement en attente.
-  const { error } = await auth.supabase.from("payments").insert({
-    reservation_id: parsed.data.reservationId,
-    stripe_payment_intent_id: paymentIntent.id,
-    amount: parsed.data.amount,
-    status: "pending",
-    method: "card",
-  });
-
-  if (error) return { success: false, error: error.message };
-
-  return {
-    success: true,
-    data: { clientSecret: paymentIntent.client_secret },
-  };
-}
+// NB : le PaymentIntent du tunnel public vit dans features/tunnel/actions.ts
+// (createTunnelPaymentAction) — action publique, montant relu en base.
 
 // ── Record Cash Payment ──────────────────────────────────
 

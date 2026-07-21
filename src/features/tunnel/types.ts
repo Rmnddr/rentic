@@ -40,6 +40,8 @@ export type TunnelCatalog = {
   shopSlug: string;
   shopName: string;
   hasCgv: boolean;
+  /** La boutique a un compte Stripe Connect actif → paiement CB en ligne */
+  onlinePayment: boolean;
   categories: TunnelCategory[];
   products: TunnelProduct[];
   participantAttributes: TunnelAttribute[];

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
@@ -47,6 +48,15 @@ export default async function ReserverPage({ params }: Props) {
   // la fonction create_web_reservation côté base)
   if (!website) notFound();
 
+  // shop_stripe_accounts n'est pas lisible par l'anonyme (RLS) — on lit le
+  // statut d'encaissement côté serveur avec le client admin, et on ne passe
+  // qu'un booléen au client.
+  const { data: stripeAccount } = await createAdminClient()
+    .from("shop_stripe_accounts")
+    .select("charges_enabled")
+    .eq("shop_id", shop.id)
+    .single();
+
   const [{ data: categories }, { data: products }, { data: attributes }, { data: packs }] =
     await Promise.all([
       supabase
@@ -74,6 +84,7 @@ export default async function ReserverPage({ params }: Props) {
     shopSlug: shop.slug,
     shopName: shop.name,
     hasCgv: Boolean(website.cgv_content),
+    onlinePayment: Boolean(stripeAccount?.charges_enabled),
     categories: categories ?? [],
     products: products ?? [],
     // RLS limite déjà les attributs aux shops publics ; on filtre par

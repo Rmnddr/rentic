@@ -9,13 +9,15 @@ export const metadata: Metadata = { title: "Réservation confirmée" };
 
 type Props = {
   params: Promise<{ shopSlug: string }>;
-  searchParams: Promise<{ ref?: string }>;
+  searchParams: Promise<{ ref?: string; redirect_status?: string }>;
 };
 
 export default async function ConfirmationPage({ params, searchParams }: Props) {
   await connection();
   const { shopSlug } = await params;
-  const { ref } = await searchParams;
+  // redirect_status est ajouté par Stripe au retour du Payment Element
+  const { ref, redirect_status: redirectStatus } = await searchParams;
+  const paidOnline = redirectStatus === "succeeded";
 
   const supabase = await createClient();
   const { data: shop } = await supabase
@@ -44,8 +46,10 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
           </p>
         )}
         <p className="mt-4 text-body-sm text-muted-foreground">
-          Votre matériel vous attendra chez <strong>{shop.name}</strong>. Le
-          paiement s&apos;effectue sur place au retrait.
+          Votre matériel vous attendra chez <strong>{shop.name}</strong>.{" "}
+          {paidOnline
+            ? "Votre paiement a bien été reçu."
+            : "Le paiement s'effectue sur place au retrait."}
         </p>
         {(shop.email || shop.phone) && (
           <p className="mt-2 text-body-sm text-muted-foreground">

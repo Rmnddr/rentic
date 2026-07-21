@@ -3,6 +3,9 @@ import { createWebReservationAction } from "./actions";
 import { createClient } from "@/lib/supabase/server";
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
+// L'import de admin/stripe déclenche la validation d'env — mocks obligatoires
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
+vi.mock("@/lib/stripe/config", () => ({ getStripe: vi.fn() }));
 
 const SHOP_ID = "5f0f6a2e-1b2c-4d3e-8f4a-9b8c7d6e5f4a";
 const PRODUCT_ID = "6a1f7b3f-2c3d-4e5f-9a5b-0c9d8e7f6a5b";

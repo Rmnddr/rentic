@@ -16,9 +16,11 @@ import type { TunnelCatalog } from "../types";
 export function StepRecap({
   catalog,
   onBack,
+  onPayment,
 }: {
   catalog: TunnelCatalog;
   onBack: () => void;
+  onPayment: (reservationId: string, amount: number) => void;
 }) {
   const router = useRouter();
   const { startDate, endDate, items, participantValues, reset } = useTunnelStore();
@@ -58,6 +60,14 @@ export function StepRecap({
       if (!result.success) {
         setError(result.error);
         setFieldErrors(result.fieldErrors ?? {});
+        return;
+      }
+
+      if (catalog.onlinePayment) {
+        // Boutique encaissable en ligne → étape paiement (montant passé
+        // explicitement, le store peut être vidé)
+        onPayment(result.data.reservationId, total);
+        reset();
         return;
       }
 
@@ -105,7 +115,9 @@ export function StepRecap({
           <span className="tabular-nums">{formatCurrency(total)}</span>
         </p>
         <p className="mt-1 text-caption text-muted-foreground">
-          Paiement sur place au moment du retrait du matériel.
+          {catalog.onlinePayment
+            ? "Paiement sécurisé par carte à l'étape suivante."
+            : "Paiement sur place au moment du retrait du matériel."}
         </p>
       </div>
 
@@ -191,7 +203,11 @@ export function StepRecap({
             Retour
           </Button>
           <Button type="submit" disabled={pending || !acceptCgv || items.length === 0}>
-            {pending ? "Réservation en cours…" : "Confirmer la réservation"}
+            {pending
+              ? "Réservation en cours…"
+              : catalog.onlinePayment
+                ? "Confirmer et payer"
+                : "Confirmer la réservation"}
           </Button>
         </div>
       </form>

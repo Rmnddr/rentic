@@ -9,20 +9,29 @@ import { StepDates } from "./step-dates";
 import { StepCatalog } from "./step-catalog";
 import { StepParticipants } from "./step-participants";
 import { StepRecap } from "./step-recap";
+import { StepPayment } from "./step-payment";
 
-const STEPS = [
+const BASE_STEPS = [
   { key: "dates", label: "Dates" },
   { key: "catalog", label: "Matériel" },
   { key: "participants", label: "Participants" },
   { key: "recap", label: "Confirmation" },
 ] as const;
 
-type StepKey = (typeof STEPS)[number]["key"];
+const PAYMENT_STEP = { key: "payment", label: "Paiement" } as const;
+
+type StepKey = (typeof BASE_STEPS)[number]["key"] | "payment";
 
 export function BookingTunnel({ catalog }: { catalog: TunnelCatalog }) {
   const [step, setStep] = useState<StepKey>("dates");
   const [availability, setAvailability] = useState<AvailabilityMap>({});
+  const [payment, setPayment] = useState<{
+    reservationId: string;
+    amount: number;
+  } | null>(null);
   const items = useTunnelStore((s) => s.items);
+
+  const STEPS = catalog.onlinePayment ? [...BASE_STEPS, PAYMENT_STEP] : BASE_STEPS;
 
   // Les items du panier ont-ils des attributs participants à collecter ?
   const hasParticipantAttributes = items.some((item) =>
@@ -100,6 +109,17 @@ export function BookingTunnel({ catalog }: { catalog: TunnelCatalog }) {
           onBack={() =>
             setStep(hasParticipantAttributes ? "participants" : "catalog")
           }
+          onPayment={(reservationId, amount) => {
+            setPayment({ reservationId, amount });
+            setStep("payment");
+          }}
+        />
+      )}
+      {step === "payment" && payment && (
+        <StepPayment
+          catalog={catalog}
+          reservationId={payment.reservationId}
+          amount={payment.amount}
         />
       )}
     </div>
