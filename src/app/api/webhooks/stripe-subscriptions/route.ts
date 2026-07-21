@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/config";
 import { requireEnv } from "@/lib/env";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -25,7 +25,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  // Client admin : un webhook n'a pas de session utilisateur — avec le
+  // client anonyme, les updates étaient silencieusement bloqués par RLS.
+  const supabase = createAdminClient();
 
   // Idempotency
   const { data: existing } = await supabase
