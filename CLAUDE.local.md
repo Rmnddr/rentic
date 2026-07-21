@@ -12,6 +12,9 @@
 ## Intégrations spécifiques
 
 ### Supabase
+- **Types générés** : `src/types/database.ts` est produit par le CLI, ne jamais l'éditer à la main. Les 4 clients (`server`, `client`, `admin`, `proxy`) sont paramétrés par `Database`, donc tables, colonnes et signatures RPC sont vérifiées par `tsc`.
+  **Après CHAQUE migration** : `supabase gen types typescript --linked > src/types/database.ts` (puis relire l'en-tête du fichier, qui rappelle la commande).
+  À savoir : les colonnes d'une **vue** arrivent toutes nullables (Postgres ne garantit pas la non-nullité à travers les LEFT JOIN) et les colonnes `text` à CHECK arrivent en `string` — il faut donc normaliser/rétrécir à la frontière, cf. `src/features/admin/queries.ts`.
 - Multi-tenant par RLS : `shop_id` est le pivot, isolation par policies (test : `supabase/tests/rls-isolation.sql`)
 - Helper Postgres `get_user_shop_id()` utilisé par les actions serveur
 - Anti double-booking : fonction `check_availability(product_id, start, end)`

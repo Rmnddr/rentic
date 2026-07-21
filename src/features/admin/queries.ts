@@ -41,6 +41,45 @@ type ShopRow = { id: string; name: string; created_at: string };
 
 type PaymentRow = { amount: number | null };
 
+// `plan` et `status` sont des colonnes `text` avec CHECK côté base : le
+// schéma généré les expose donc en `string`. On les rétrécit ici, à la
+// frontière, plutôt que de faire confiance à un cast.
+function toSubscriptionRow(row: {
+  shop_id: string;
+  plan: string;
+  status: string;
+}): SubscriptionRow | null {
+  const plan = PLANS.find((p) => p === row.plan);
+  const status = STATUSES.find((s) => s === row.status);
+  if (!plan || !status) return null;
+  return { shop_id: row.shop_id, plan, status };
+}
+
+const PLANS: SubscriptionPlan[] = ["trial", "season", "annual"];
+const STATUSES: SubscriptionStatus[] = [
+  "trialing",
+  "active",
+  "past_due",
+  "canceled",
+  "expired",
+];
+
+// Les colonnes d'une vue Postgres sont toutes nullables du point de vue du
+// schéma généré (le planificateur ne peut pas garantir la non-nullité à
+// travers les LEFT JOIN). On normalise ici avec des valeurs de repli.
+type RawFunnelRow = {
+  shop_id: string | null;
+  shop_name: string | null;
+  slug: string | null;
+  created_at: string | null;
+  onboarding_completed?: boolean | null;
+  onboarding_current_step?: number | null;
+  categories_count?: number | null;
+  products_count: number | null;
+  reservations_count: number | null;
+  website_published: boolean | null;
+};
+
 type FunnelRow = {
   shop_id: string;
   shop_name: string;
@@ -53,6 +92,23 @@ type FunnelRow = {
   reservations_count: number;
   website_published: boolean;
 };
+
+/** Normalise une ligne de vue ; écarte celles sans identifiant exploitable. */
+function toFunnelRow(row: RawFunnelRow): FunnelRow | null {
+  if (!row.shop_id || !row.created_at) return null;
+  return {
+    shop_id: row.shop_id,
+    shop_name: row.shop_name ?? "Magasin sans nom",
+    slug: row.slug ?? "",
+    created_at: row.created_at,
+    onboarding_completed: row.onboarding_completed ?? false,
+    onboarding_current_step: row.onboarding_current_step ?? null,
+    categories_count: row.categories_count ?? 0,
+    products_count: row.products_count ?? 0,
+    reservations_count: row.reservations_count ?? 0,
+    website_published: row.website_published ?? false,
+  };
+}
 
 function countBy(
   subscriptions: SubscriptionRow[],
@@ -95,7 +151,9 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
         .limit(10),
     ]);
 
-  const subscriptions: SubscriptionRow[] = subscriptionsResult.data ?? [];
+  const subscriptions: SubscriptionRow[] = (subscriptionsResult.data ?? [])
+    .map(toSubscriptionRow)
+    .filter((s): s is SubscriptionRow => s !== null);
   const payments: PaymentRow[] = paymentsResult.data ?? [];
   const latest: ShopRow[] = latestShopsResult.data ?? [];
 
@@ -142,16 +200,9 @@ export async function getShopsPage(requestedPage: number): Promise<ShopListPage>
     .order("created_at", { ascending: false })
     .range(from, from + SHOPS_PAGE_SIZE - 1);
 
-  const rows: Pick<
-    FunnelRow,
-    | "shop_id"
-    | "shop_name"
-    | "slug"
-    | "created_at"
-    | "products_count"
-    | "reservations_count"
-    | "website_published"
-  >[] = data ?? [];
+  const rows: FunnelRow[] = (data ?? [])
+    .map(toFunnelRow)
+    .filter((r): r is FunnelRow => r !== null);
 
   const { data: subscriptionsData } = await supabase
     .from("subscriptions")
@@ -161,7 +212,9 @@ export async function getShopsPage(requestedPage: number): Promise<ShopListPage>
       rows.map((r) => r.shop_id),
     );
 
-  const subscriptions: SubscriptionRow[] = subscriptionsData ?? [];
+  const subscriptions: SubscriptionRow[] = (subscriptionsData ?? [])
+    .map(toSubscriptionRow)
+    .filter((s): s is SubscriptionRow => s !== null);
   const byShop = new Map<string, SubscriptionRow>(
     subscriptions.map((s) => [s.shop_id, s]),
   );
@@ -212,7 +265,9 @@ export async function getOnboardingFunnel(): Promise<OnboardingFunnel> {
     )
     .order("created_at", { ascending: false });
 
-  const rows: FunnelRow[] = data ?? [];
+  const rows: FunnelRow[] = (data ?? [])
+    .map(toFunnelRow)
+    .filter((r): r is FunnelRow => r !== null);
   const now = new Date();
 
   const mapped: OnboardingFunnelRow[] = rows.map((row) => ({

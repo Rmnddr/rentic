@@ -81,7 +81,10 @@ export async function createWebReservationAction(data: {
       p_shop_id: input.shopId,
       p_customer_name: input.customerName,
       p_customer_email: input.customerEmail,
-      p_customer_phone: input.customerPhone || null,
+      // La fonction SQL normalise elle-même la chaîne vide en NULL
+      // (nullif(trim(coalesce(...)))) : on lui passe donc "" plutôt que null,
+      // conforme à sa signature `p_customer_phone text`.
+      p_customer_phone: input.customerPhone,
       p_start_date: input.startDate,
       p_end_date: input.endDate,
       p_items: input.items.map((item) => ({
