@@ -8,6 +8,7 @@ import {
 import { CatalogToolbar } from "@/features/catalog/components/catalog-toolbar";
 import { createClient } from "@/lib/supabase/server";
 import { Package } from "lucide-react";
+import Image from "next/image";
 
 export default async function CatalogPage() {
   const supabase = await createClient();
@@ -86,8 +87,26 @@ export default async function CatalogPage() {
                       {categoryProducts.map((product) => (
                         <div
                           key={product.id}
-                          className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-secondary/30"
+                          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-secondary/30"
                         >
+                          <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.name}
+                                fill
+                                sizes="48px"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center">
+                                <Package
+                                  className="size-5 text-muted-foreground"
+                                  aria-hidden
+                                />
+                              </div>
+                            )}
+                          </div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">
                               {product.name}

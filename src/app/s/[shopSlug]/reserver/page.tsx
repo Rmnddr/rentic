@@ -67,7 +67,7 @@ export default async function ReserverPage({ params }: Props) {
         .order("position"),
       supabase
         .from("products")
-        .select("id, name, description, price_web, category_id")
+        .select("id, name, description, price_web, category_id, image_url")
         .eq("shop_id", shop.id),
       supabase
         .from("category_attributes")

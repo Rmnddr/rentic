@@ -18,7 +18,8 @@
 - Multi-tenant par RLS : `shop_id` est le pivot, isolation par policies (test : `supabase/tests/rls-isolation.sql`)
 - Helper Postgres `get_user_shop_id()` utilisé par les actions serveur
 - Anti double-booking : fonction `check_availability(product_id, start, end)`
-- ⚠️ Le projet distant historique (`qslfpiheuqdhiufgyfdd`) a été supprimé — recréer un projet et rejouer les 10 migrations (`supabase/migrations/`), puis mettre à jour `.env.local` et `.mcp.json`
+- Projet distant actuel : `mdawpbktapdkeelhaedy` (org perso, région Paris), linké et fonctionnel — recréé le 21/07/2026 après suppression de l'historique `qslfpiheuqdhiufgyfdd`. Toutes les migrations y sont appliquées.
+- Storage : bucket public `shop-media` (5 Mo max, MIME images imposés au niveau bucket), arborescence `{shop_id}/{domaine}/{uuid}.{ext}`, écriture limitée au préfixe du shop par policies RLS. Upload direct navigateur via `src/components/shared/image-upload.tsx`.
 
 ### Stripe
 - Version SDK : `stripe@^20`, client lazy via `getStripe()` (jamais d'instanciation au chargement du module)

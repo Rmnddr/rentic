@@ -24,7 +24,7 @@ export default async function DashboardLayout({
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("name, onboarding_completed")
+    .select("name, onboarding_completed, logo_url")
     .eq("id", profile?.shop_id ?? "")
     .single();
 
@@ -49,6 +49,7 @@ export default async function DashboardLayout({
     <div className="min-h-screen bg-background">
       <Sidebar
         shopName={shop?.name ?? "Mon magasin"}
+        shopLogoUrl={shop?.logo_url ?? null}
         userName={userName}
         userRole={profile?.role === "employee" ? "employee" : "owner"}
       />

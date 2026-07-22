@@ -1,9 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { Package } from "lucide-react";
 
 type Props = { params: Promise<{ shopSlug: string }> };
 
@@ -32,7 +34,7 @@ export default async function ShopPage({ params }: Props) {
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, slug, email, phone, address")
+    .select("id, name, slug, email, phone, address, logo_url")
     .eq("slug", shopSlug)
     .single();
 
@@ -64,23 +66,53 @@ export default async function ShopPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero */}
-      <section className="flex flex-col items-center gap-4 px-4 py-16 text-center">
-        <h1 className="text-display text-primary">
-          {website?.hero_title || shop.name}
-        </h1>
-        {website?.hero_subtitle && (
-          <p className="max-w-2xl text-lg text-muted-foreground">
-            {website.hero_subtitle}
-          </p>
+      <section className="relative overflow-hidden px-4 py-16">
+        {website?.hero_image_url && (
+          <>
+            <Image
+              src={website.hero_image_url}
+              alt=""
+              fill
+              sizes="100vw"
+              priority
+              className="object-cover"
+            />
+            {/* Voile pour garantir la lisibilité du texte sur l'image */}
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background"
+              aria-hidden
+            />
+          </>
         )}
-        {website && (
-          <Link
-            href={`/s/${shop.slug}/reserver`}
-            className={buttonVariants({ size: "lg" })}
-          >
-            Réserver en ligne
-          </Link>
-        )}
+        <div className="relative flex flex-col items-center gap-4 text-center">
+          {shop.logo_url && (
+            <span className="relative block h-16 w-16 overflow-hidden rounded-full border bg-card shadow-sm">
+              <Image
+                src={shop.logo_url}
+                alt={`Logo ${shop.name}`}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            </span>
+          )}
+          <h1 className="text-display text-primary">
+            {website?.hero_title || shop.name}
+          </h1>
+          {website?.hero_subtitle && (
+            <p className="max-w-2xl text-lg text-muted-foreground">
+              {website.hero_subtitle}
+            </p>
+          )}
+          {website && (
+            <Link
+              href={`/s/${shop.slug}/reserver`}
+              className={buttonVariants({ size: "lg" })}
+            >
+              Réserver en ligne
+            </Link>
+          )}
+        </div>
       </section>
 
       {/* Catalogue */}
@@ -97,17 +129,37 @@ export default async function ShopPage({ params }: Props) {
                     .map((product) => (
                       <div
                         key={product.id}
-                        className="rounded-lg border bg-card p-4 shadow-sm"
+                        className="overflow-hidden rounded-lg border bg-card shadow-sm"
                       >
-                        <h4 className="font-semibold">{product.name}</h4>
-                        {product.description && (
-                          <p className="mt-1 text-body-sm text-muted-foreground">
-                            {product.description}
+                        <div className="relative aspect-[4/3] bg-secondary">
+                          {product.image_url ? (
+                            <Image
+                              src={product.image_url}
+                              alt={product.name}
+                              fill
+                              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Package
+                                className="size-8 text-muted-foreground"
+                                aria-hidden
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h4 className="font-semibold">{product.name}</h4>
+                          {product.description && (
+                            <p className="mt-1 text-body-sm text-muted-foreground">
+                              {product.description}
+                            </p>
+                          )}
+                          <p className="mt-2 text-lg font-bold tabular-nums text-primary">
+                            {(product.price_web / 100).toFixed(2)} €
                           </p>
-                        )}
-                        <p className="mt-2 text-lg font-bold tabular-nums text-primary">
-                          {(product.price_web / 100).toFixed(2)} €
-                        </p>
+                        </div>
                       </div>
                     ))}
                 </div>
@@ -125,17 +177,37 @@ export default async function ShopPage({ params }: Props) {
               {packs.map((pack) => (
                 <div
                   key={pack.id}
-                  className="rounded-lg border bg-card p-4 shadow-sm"
+                  className="overflow-hidden rounded-lg border bg-card shadow-sm"
                 >
-                  <span className="mb-2 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-caption font-medium text-primary">
-                    Pack
-                  </span>
-                  <h4 className="font-semibold">{pack.name}</h4>
-                  {pack.description && (
-                    <p className="mt-1 text-body-sm text-muted-foreground">
-                      {pack.description}
-                    </p>
-                  )}
+                  <div className="relative aspect-[4/3] bg-secondary">
+                    {pack.image_url ? (
+                      <Image
+                        src={pack.image_url}
+                        alt={pack.name}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <Package
+                          className="size-8 text-muted-foreground"
+                          aria-hidden
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <span className="mb-2 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-caption font-medium text-primary">
+                      Pack
+                    </span>
+                    <h4 className="font-semibold">{pack.name}</h4>
+                    {pack.description && (
+                      <p className="mt-1 text-body-sm text-muted-foreground">
+                        {pack.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
