@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    /* Rentic Design Tokens — Direction 3 "Soft Rounded" */
+    /* Rentic Design Tokens — Direction 3 "Soft Rounded" (Organique Premium) */
 
-    /* Primary — Indigo */
-    --primary: 231 78% 65%;
+    /* Primary */
+    --primary: 231 70% 58%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -16,19 +16,19 @@
 
     /* Muted */
     --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted-foreground: 240 5% 45%;
 
-    /* Accent — Amber */
-    --accent: 38 92% 63%;
-    --accent-foreground: 38 92% 20%;
+    /* Accent */
+    --accent: 38 95% 60%;
+    --accent-foreground: 240 10% 10%;
 
     /* Surfaces */
-    --background: 250 100% 99%;
-    --foreground: 240 10% 4%;
+    --background: 40 30% 98%;
+    --foreground: 240 10% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 240 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 240 10% 10%;
 
     /* Sémantiques */
     --destructive: 0 84% 60%;
@@ -41,7 +41,7 @@
     /* Borders & Inputs */
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 231 78% 65%;
+    --ring: 231 70% 58%;
 
     /* Charts */
     --chart-1: 231 78% 65%;
@@ -52,21 +52,24 @@
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 4%;
+    --sidebar-foreground: 240 10% 10%;
     --sidebar-active: 233 100% 96%;
 
-    /* Border Radius — Direction 3 Soft Rounded */
+    /* Border Radius — Organique Premium */
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
     --radius-lg: 1rem;
     --radius-xl: 1.25rem;
     --radius: 1rem;
 
-    /* Shadows — Direction 3 */
+    /* Shadows — Organique Premium */
     --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.03);
     --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.04);
     --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-organic: 0 8px 30px rgba(0, 0, 0, 0.06);
+    --shadow-organic-hover: 0 12px 40px rgba(0, 0, 0, 0.1);
+    --shadow-organic-sm: 0 4px 15px rgba(0, 0, 0, 0.04);
   }
 }
 
