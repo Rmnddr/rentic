@@ -69,13 +69,15 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Gestion des Réservations Back-office
+  # (4-4 et 4-6 avaient été marquées done à tort le 2026-07-21, corrigées puis
+  # réellement implémentées et vérifiées en navigateur le même jour.)
   epic-4: done
   4-1-schema-bdd-reservations: done
   4-2-creation-reservation-manuelle: done
   4-3-consultation-reservations-4-vues: done
-  4-4-modification-statut-reservation: done
-  4-5-collecte-attributs-participants-eav: done
-  4-6-toggle-vue-reservations-materiel: done
+  4-4-modification-statut-reservation: done # page détail + boutons de transition, cycle vérifié
+  4-5-collecte-attributs-participants-eav: done # attributs visibles sur la page détail
+  4-6-toggle-vue-reservations-materiel: done # toggle ?vue=materiel, unités sorties par produit
   epic-4-retrospective: optional
 
 # AUDIT 2026-07-21 : statuts corrigés pour refléter l'état réel du code
@@ -118,10 +120,12 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 8: Dashboard & Équipe
-  epic-8: done
+  # (8-3 avait été marquée done à tort le 2026-07-21, corrigée puis réellement
+  # implémentée et vérifiée le même jour.)
+  epic-8: in-progress
   8-1-dashboard-owner-metriques-cles: done
   8-2-dashboard-employe-reservations-jour: done
-  8-3-preparation-materiel-reservations-7-jours: done
+  8-3-preparation-materiel-reservations-7-jours: done # bloc « À préparer (7 jours) » avec attributs participants
   8-4-invitation-employe-email: done # email d'invitation branché (TODO levé)
   8-5-gestion-comptes-employes: in-progress # toggle statut toujours placeholder (pas de colonne is_active)
   8-6-navigation-role-sidebar-flottante: done

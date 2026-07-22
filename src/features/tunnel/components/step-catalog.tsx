@@ -133,14 +133,13 @@ export function StepCatalog({
                 className="flex items-center justify-between gap-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-body-sm font-medium">
-                    {item.productName}
+                  {/* div et non p : Badge rend un <div>, invalide dans un <p> */}
+                  <div className="flex items-center gap-2 text-body-sm font-medium">
+                    <span className="truncate">{item.productName}</span>
                     {item.packName && (
-                      <Badge variant="secondary" className="ml-2">
-                        {item.packName}
-                      </Badge>
+                      <Badge variant="secondary">{item.packName}</Badge>
                     )}
-                  </p>
+                  </div>
                   <p className="text-caption text-muted-foreground">
                     {formatCurrency(item.unitPrice)} / unité
                   </p>
