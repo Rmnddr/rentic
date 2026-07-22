@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/shared/image-upload";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -15,6 +16,7 @@ type Props = {
     address: string | null;
     siret: string | null;
     tva_number: string | null;
+    logo_url: string | null;
   };
   shopId: string;
 };
@@ -48,6 +50,7 @@ export function EditShopForm({ shop, shopId }: Props) {
         address: getField("address") || null,
         siret: getField("siret") || null,
         tva_number: getField("tvaNumber") || null,
+        logo_url: getField("logoUrl") || null,
       })
       .eq("id", shopId);
 
@@ -78,6 +81,12 @@ export function EditShopForm({ shop, shopId }: Props) {
         <Label htmlFor="shop-address">Adresse</Label>
         <Input id="shop-address" name="address" defaultValue={shop.address ?? ""} />
       </div>
+      <ImageUpload
+        folder="logo"
+        name="logoUrl"
+        label="Logo"
+        defaultValue={shop.logo_url}
+      />
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="shop-siret">SIRET</Label>

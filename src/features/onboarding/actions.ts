@@ -7,6 +7,7 @@ import {
   updateProfileSchema,
   updateShopSchema,
 } from "@/lib/schemas/onboarding";
+import type { TablesUpdate } from "@/types/database";
 import type { ActionResult } from "@/types/global";
 import { redirect } from "next/navigation";
 
@@ -58,15 +59,18 @@ export async function updateShopAction(
   if (!parsed.ok) {
     return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-  const { shopName, address, siret, tvaNumber, slug } = parsed.data;
+  const { shopName, address, siret, tvaNumber, slug, logoUrl } = parsed.data;
 
-  const update: Record<string, string> = {
+  const update: TablesUpdate<"shops"> = {
     name: shopName,
     address,
     siret,
     tva_number: tvaNumber,
   };
   if (slug) update.slug = slug;
+  // Champ absent du formulaire → on ne touche pas au logo existant ;
+  // chaîne vide explicite (logo retiré) → null.
+  if (logoUrl !== undefined) update.logo_url = logoUrl || null;
 
   const { error } = await auth.supabase
     .from("shops")

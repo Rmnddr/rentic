@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/shared/image-upload";
 import { createProductAction } from "@/features/catalog/actions";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -104,6 +105,11 @@ export function CreateProductDialog({ categories, brands }: Props) {
             <Label htmlFor="prod-desc">Description</Label>
             <Input id="prod-desc" name="description" />
           </div>
+          <ImageUpload
+            folder="products"
+            name="imageUrl"
+            label="Photo du produit"
+          />
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="prod-price-web">Prix web (€)</Label>

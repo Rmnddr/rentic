@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { uuidSchema } from "./catalog";
+import { shopMediaUrlSchema } from "./shop-media";
 
 // Schémas du domaine packs (source de vérité NCF, alignés sur
 // 20260317000005_create_packs_schema.sql : overrides de prix nullables,
@@ -67,6 +68,7 @@ export const createPackSchema = z.object({
     .max(2000, "Description trop longue (max 2000 caractères).")
     .optional()
     .default(""),
+  imageUrl: shopMediaUrlSchema.optional().default(""),
   items: packItemsJsonSchema,
 });
 

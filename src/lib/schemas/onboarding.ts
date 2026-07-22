@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { categoryTypeSchema } from "./catalog";
+import { shopMediaUrlSchema } from "./shop-media";
 
 // Schémas du domaine onboarding (source de vérité NCF, alignés sur les
 // colonnes de 20260317000001_create_foundation_schema.sql : profiles, shops).
@@ -60,6 +61,10 @@ export const updateShopSchema = z.object({
     .optional()
     .default(""),
   slug: shopSlugSchema.optional().or(z.literal("")),
+  // Pas de .default("") : un champ absent (formulaire sans upload, comme
+  // l'étape 2 de l'onboarding) reste `undefined` et ne touche pas au logo ;
+  // seule une chaîne vide explicite (logo retiré) l'efface.
+  logoUrl: shopMediaUrlSchema.optional(),
 });
 
 // ── Première catégorie (étape 3) ──────────────────────────

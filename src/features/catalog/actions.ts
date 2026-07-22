@@ -167,7 +167,8 @@ export async function createProductAction(
   if (!parsed.ok) {
     return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-  const { name, categoryId, description, priceWeb, priceShop, brandId } = parsed.data;
+  const { name, categoryId, description, priceWeb, priceShop, brandId, imageUrl } =
+    parsed.data;
 
   const { data, error } = await auth.supabase
     .from("products")
@@ -179,6 +180,7 @@ export async function createProductAction(
       description,
       price_web: priceWeb,
       price_shop: priceShop,
+      image_url: imageUrl || null,
     })
     .select("id")
     .single();
@@ -198,7 +200,8 @@ export async function updateProductAction(
   if (!parsed.ok) {
     return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-  const { id, name, description, priceWeb, priceShop, brandId } = parsed.data;
+  const { id, name, description, priceWeb, priceShop, brandId, imageUrl } =
+    parsed.data;
 
   const { error } = await auth.supabase
     .from("products")
@@ -208,6 +211,7 @@ export async function updateProductAction(
       price_web: priceWeb,
       price_shop: priceShop,
       brand_id: brandId || null,
+      image_url: imageUrl || null,
     })
     .eq("id", id);
 

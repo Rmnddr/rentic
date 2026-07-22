@@ -24,6 +24,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -48,6 +49,7 @@ const NAV_ITEMS: NavItem[] = [
 
 type SidebarProps = {
   shopName: string;
+  shopLogoUrl: string | null;
   userName: string;
   userRole: "owner" | "employee";
 };
@@ -89,7 +91,7 @@ function NavLink({
   );
 }
 
-function SidebarContent({ shopName, userName, userRole, onNavigate }: SidebarProps & { onNavigate?: () => void }) {
+function SidebarContent({ shopName, shopLogoUrl, userName, userRole, onNavigate }: SidebarProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   const visibleItems = NAV_ITEMS.filter(
@@ -101,9 +103,23 @@ function SidebarContent({ shopName, userName, userRole, onNavigate }: SidebarPro
       {/* Header */}
       <div className="px-4 pb-2 pt-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">R</span>
-          </div>
+          {shopLogoUrl ? (
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-secondary">
+              <Image
+                src={shopLogoUrl}
+                alt={`Logo ${shopName}`}
+                fill
+                sizes="36px"
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">
+                R
+              </span>
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-h3 leading-tight text-foreground">Rentic</p>
             <p className="truncate text-caption text-muted-foreground">{shopName}</p>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/shared/image-upload";
 import { Separator } from "@/components/ui/separator";
 import { updateCgvAction, updateWebsiteAction } from "@/features/website-builder/actions";
 import { Globe } from "lucide-react";
@@ -88,15 +89,16 @@ export function WebsiteEditor({ website, shopSlug }: Props) {
                 placeholder="Location de matériel sportif..."
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="heroImageUrl">URL image hero</Label>
-              <Input
-                id="heroImageUrl"
-                name="heroImageUrl"
-                defaultValue={website?.hero_image_url ?? ""}
-                placeholder="https://..."
-              />
-            </div>
+            {/* Une hero_image_url externe héritée de l'ancien champ texte
+                reste affichée en vitrine ; mais toute nouvelle soumission
+                n'accepte qu'une image du bucket shop-media (validée côté
+                serveur par updateWebsiteSchema) — ou aucune image. */}
+            <ImageUpload
+              folder="website"
+              name="heroImageUrl"
+              label="Image de fond du hero"
+              defaultValue={website?.hero_image_url}
+            />
 
             <input type="hidden" name="sections" value="[]" />
 

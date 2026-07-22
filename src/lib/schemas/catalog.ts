@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { shopMediaUrlSchema } from "./shop-media";
 
 // Schémas partagés du domaine catalogue (source de vérité NCF, alignés sur
 // les CHECK constraints de 20260317000003_create_catalog_schema.sql).
@@ -69,6 +70,7 @@ export const createProductSchema = z.object({
   priceWeb: priceSchema.default(0),
   priceShop: priceSchema.default(0),
   brandId: uuidSchema.optional().or(z.literal("")).nullable(),
+  imageUrl: shopMediaUrlSchema.optional().default(""),
 });
 
 export const updateProductSchema = createProductSchema

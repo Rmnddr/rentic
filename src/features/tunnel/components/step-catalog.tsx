@@ -1,13 +1,49 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { Minus, Package, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils/format-currency";
 import { useTunnelStore } from "../store";
 import type { AvailabilityMap, TunnelCatalog, TunnelPack } from "../types";
+import { cn } from "@/lib/utils";
+
+/** Vignette produit avec fallback icône quand l'image est absente. */
+function ProductThumbnail({
+  imageUrl,
+  name,
+  className,
+}: {
+  imageUrl: string | null;
+  name: string;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "relative block shrink-0 overflow-hidden rounded-md bg-secondary",
+        className,
+      )}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          sizes="56px"
+          className="object-cover"
+        />
+      ) : (
+        <span className="flex h-full items-center justify-center">
+          <Package className="size-5 text-muted-foreground" aria-hidden />
+        </span>
+      )}
+    </span>
+  );
+}
 
 export function StepCatalog({
   catalog,
@@ -70,14 +106,21 @@ export function StepCatalog({
                       key={product.id}
                       className="flex items-center justify-between gap-4 rounded-lg border bg-card p-4"
                     >
-                      <div className="min-w-0">
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-body-sm text-muted-foreground">
-                          {formatCurrency(product.price_web)} ·{" "}
-                          {available > 0
-                            ? `${available} disponible${available > 1 ? "s" : ""}`
-                            : "Indisponible sur ces dates"}
-                        </p>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <ProductThumbnail
+                          imageUrl={product.image_url}
+                          name={product.name}
+                          className="size-14"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-body-sm text-muted-foreground">
+                            {formatCurrency(product.price_web)} ·{" "}
+                            {available > 0
+                              ? `${available} disponible${available > 1 ? "s" : ""}`
+                              : "Indisponible sur ces dates"}
+                          </p>
+                        </div>
                       </div>
                       <Button
                         variant="outline"
@@ -132,17 +175,24 @@ export function StepCatalog({
                 key={`${item.productId}-${item.packId ?? "solo"}`}
                 className="flex items-center justify-between gap-3"
               >
-                <div className="min-w-0 flex-1">
-                  {/* div et non p : Badge rend un <div>, invalide dans un <p> */}
-                  <div className="flex items-center gap-2 text-body-sm font-medium">
-                    <span className="truncate">{item.productName}</span>
-                    {item.packName && (
-                      <Badge variant="secondary">{item.packName}</Badge>
-                    )}
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <ProductThumbnail
+                    imageUrl={productById.get(item.productId)?.image_url ?? null}
+                    name={item.productName}
+                    className="size-10"
+                  />
+                  <div className="min-w-0 flex-1">
+                    {/* div et non p : Badge rend un <div>, invalide dans un <p> */}
+                    <div className="flex items-center gap-2 text-body-sm font-medium">
+                      <span className="truncate">{item.productName}</span>
+                      {item.packName && (
+                        <Badge variant="secondary">{item.packName}</Badge>
+                      )}
+                    </div>
+                    <p className="text-caption text-muted-foreground">
+                      {formatCurrency(item.unitPrice)} / unité
+                    </p>
                   </div>
-                  <p className="text-caption text-muted-foreground">
-                    {formatCurrency(item.unitPrice)} / unité
-                  </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button

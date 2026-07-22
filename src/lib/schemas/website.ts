@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { shopMediaUrlSchema } from "./shop-media";
 
 // Schémas du domaine website-builder (source de vérité NCF, alignés sur les
 // colonnes de 20260317000007_create_shop_websites.sql : shop_websites).
@@ -21,12 +22,11 @@ const longTextSchema = z
 export const updateWebsiteSchema = z.object({
   heroTitle: titleSchema,
   heroSubtitle: titleSchema,
-  heroImageUrl: z
-    .url("URL de l'image invalide.")
-    .max(2000, "URL trop longue (max 2000 caractères).")
-    .optional()
-    .or(z.literal(""))
-    .default(""),
+  // Restreint au bucket shop-media DEPUIS la soumission uniquement : une
+  // valeur externe déjà en base (saisie du temps où le champ était une URL
+  // libre) reste affichable côté vitrine, mais re-sauvegarder le formulaire
+  // exigera une image uploadée dans le bucket (ou aucune image).
+  heroImageUrl: shopMediaUrlSchema.optional().default(""),
   // JSON brut des sections — parsé/vérifié dans l'action (étape VÉRIFICATION).
   sections: longTextSchema,
   isPublished: z

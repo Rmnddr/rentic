@@ -20,11 +20,11 @@ export async function createPackAction(
   if (!parsed.ok) {
     return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-  const { name, description, items } = parsed.data;
+  const { name, description, imageUrl, items } = parsed.data;
 
   const { data: pack, error: packError } = await auth.supabase
     .from("packs")
-    .insert({ shop_id: auth.shopId, name, description })
+    .insert({ shop_id: auth.shopId, name, description, image_url: imageUrl || null })
     .select("id")
     .single();
 
@@ -59,11 +59,11 @@ export async function updatePackAction(
   if (!parsed.ok) {
     return { success: false, error: parsed.error, fieldErrors: parsed.fieldErrors };
   }
-  const { id, name, description, items } = parsed.data;
+  const { id, name, description, imageUrl, items } = parsed.data;
 
   const { error: packError } = await auth.supabase
     .from("packs")
-    .update({ name, description })
+    .update({ name, description, image_url: imageUrl || null })
     .eq("id", id);
 
   if (packError) return { success: false, error: packError.message };

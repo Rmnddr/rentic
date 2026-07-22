@@ -6,6 +6,7 @@ export type TunnelProduct = {
   description: string | null;
   price_web: number;
   category_id: string;
+  image_url: string | null;
 };
 
 export type TunnelCategory = {

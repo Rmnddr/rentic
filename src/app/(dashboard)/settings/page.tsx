@@ -31,7 +31,7 @@ export default async function SettingsPage({ searchParams }: Props) {
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("name, slug, email, phone, address, siret, tva_number")
+    .select("name, slug, email, phone, address, siret, tva_number, logo_url")
     .eq("id", profile?.shop_id ?? "")
     .single();
 
