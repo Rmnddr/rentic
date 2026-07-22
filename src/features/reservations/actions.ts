@@ -146,5 +146,6 @@ export async function updateReservationStatusAction(
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/reservations");
+  revalidatePath(`/reservations/${id}`);
   return { success: true, data: null };
 }

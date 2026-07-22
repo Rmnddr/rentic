@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,6 +8,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CashPaymentDialog } from "@/features/payments/components/cash-payment-dialog";
 import { CreateReservationDialog } from "@/features/reservations/components/create-reservation-dialog";
+import { MaterialView } from "@/features/reservations/components/material-view";
 import { createClient } from "@/lib/supabase/server";
 import { CalendarDays, FileText } from "lucide-react";
 
@@ -20,10 +22,14 @@ const STATUS_CONFIG: Record<
   cancelled: { label: "Annulée", variant: "destructive" },
 };
 
-export default async function ReservationsPage() {
-  const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
+type Props = { searchParams: Promise<{ vue?: string }> };
 
+export default async function ReservationsPage({ searchParams }: Props) {
+  const { vue } = await searchParams;
+  // Story 4.6 : toggle Vue Réservations ↔ Vue Matériel
+  const materialView = vue === "materiel";
+
+  const supabase = await createClient();
   const { data: reservations } = await supabase
     .from("reservations")
     .select("id, customer_name, customer_email, customer_phone, start_date, end_date, status, source, total_price, created_at")
@@ -40,9 +46,10 @@ export default async function ReservationsPage() {
     succeededPayments?.map((p) => p.reservation_id) ?? [],
   );
 
-  const upcoming = reservations?.filter(
-    (r) => r.status === "confirmed" && r.start_date > today,
-  ) ?? [];
+  // Toutes les confirmées sont « à venir » (pas encore démarrées) : filtrer
+  // aussi sur la date faisait disparaître de tous les onglets une réservation
+  // confirmée démarrant aujourd'hui ou en retard de démarrage.
+  const upcoming = reservations?.filter((r) => r.status === "confirmed") ?? [];
   const inProgress = reservations?.filter(
     (r) => r.status === "in_progress",
   ) ?? [];
@@ -81,7 +88,11 @@ export default async function ReservationsPage() {
               key={res.id}
               className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-secondary/30"
             >
-              <div className="min-w-0 flex-1">
+              <Link
+                href={`/reservations/${res.id}`}
+                className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`Ouvrir la réservation de ${res.customer_name}`}
+              >
                 <div className="flex items-center gap-2">
                   <p className="truncate font-medium">{res.customer_name}</p>
                   {res.source === "web" && (
@@ -101,7 +112,7 @@ export default async function ReservationsPage() {
                     month: "short",
                   })}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-3">
                 <p className="text-sm font-semibold tabular-nums">
                   {(res.total_price / 100).toFixed(0)}&nbsp;€
@@ -156,6 +167,33 @@ export default async function ReservationsPage() {
         <CreateReservationDialog />
       </header>
 
+      {/* Story 4.6 : bascule entre la vue par réservations et la vue matériel */}
+      <nav aria-label="Mode d'affichage" className="flex gap-1 rounded-lg bg-secondary p-1 w-fit">
+        <Link
+          href="/reservations"
+          aria-current={!materialView ? "page" : undefined}
+          className={buttonVariants({
+            variant: materialView ? "ghost" : "default",
+            size: "sm",
+          })}
+        >
+          Réservations
+        </Link>
+        <Link
+          href="/reservations?vue=materiel"
+          aria-current={materialView ? "page" : undefined}
+          className={buttonVariants({
+            variant: materialView ? "default" : "ghost",
+            size: "sm",
+          })}
+        >
+          Matériel
+        </Link>
+      </nav>
+
+      {materialView ? (
+        <MaterialView />
+      ) : (
       <Tabs defaultValue="upcoming">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="upcoming" className="min-h-[44px]">
@@ -207,6 +245,7 @@ export default async function ReservationsPage() {
           </TabsContent>
         </Card>
       </Tabs>
+      )}
     </div>
   );
 }
