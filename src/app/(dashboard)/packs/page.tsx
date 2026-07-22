@@ -1,10 +1,14 @@
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { DeletePackButton } from "@/features/packs/components/delete-pack-button";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+  PackFormDialog,
+  type PackProduct,
+} from "@/features/packs/components/pack-form-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { Layers } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default async function PacksPage() {
   const supabase = await createClient();
@@ -16,15 +20,41 @@ export default async function PacksPage() {
 
   const { data: packItems } = await supabase
     .from("pack_items")
-    .select("id, pack_id, product_id, is_required, price_web_override, price_shop_override");
+    .select(
+      "id, pack_id, product_id, is_required, price_web_override, price_shop_override, position",
+    )
+    .order("position");
+
+  const { data: productRows } = await supabase
+    .from("products")
+    .select("id, name, price_web, price_shop")
+    .order("name");
+
+  const products: PackProduct[] = (productRows ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    priceWeb: p.price_web,
+    priceShop: p.price_shop,
+  }));
+
+  // Un pack exige au moins 2 produits : sans catalogue suffisant, on oriente
+  // vers le catalogue plutôt que d'ouvrir un formulaire impossible à valider.
+  const canCreate = products.length >= 2;
+
+  function itemsOf(packId: string) {
+    return (packItems ?? []).filter((i) => i.pack_id === packId);
+  }
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-h1">Packs</h1>
-        <p className="mt-1 text-body-sm text-muted-foreground">
-          Créez des offres groupées attractives
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-h1">Packs</h1>
+          <p className="mt-1 text-body-sm text-muted-foreground">
+            Créez des offres groupées attractives
+          </p>
+        </div>
+        {canCreate && <PackFormDialog products={products} />}
       </header>
 
       {!packs || packs.length === 0 ? (
@@ -34,15 +64,30 @@ export default async function PacksPage() {
               <Layers className="h-7 w-7 text-primary" />
             </div>
             <h2 className="text-h3">Aucun pack</h2>
-            <p className="mt-1 text-body-sm text-muted-foreground">
-              Créez votre premier pack pour proposer des offres groupées
-            </p>
+            {canCreate ? (
+              <>
+                <p className="mt-1 text-body-sm text-muted-foreground">
+                  Créez votre premier pack pour proposer des offres groupées
+                </p>
+                <div className="mt-4">
+                  <PackFormDialog products={products} />
+                </div>
+              </>
+            ) : (
+              <p className="mt-1 text-body-sm text-muted-foreground">
+                Ajoutez au moins 2 produits à votre{" "}
+                <Link href="/catalog" className="underline">
+                  catalogue
+                </Link>{" "}
+                pour composer un pack
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {packs.map((pack) => {
-            const items = packItems?.filter((i) => i.pack_id === pack.id) ?? [];
+            const items = itemsOf(pack.id);
             const requiredCount = items.filter((i) => i.is_required).length;
             const optionalCount = items.filter((i) => !i.is_required).length;
 
@@ -52,9 +97,32 @@ export default async function PacksPage() {
                 className="transition-shadow hover:shadow-hover"
               >
                 <CardContent className="pt-6">
-                  <div className="mb-3 flex items-start justify-between">
-                    <h3 className="text-h3">{pack.name}</h3>
-                    <Badge variant="secondary" className="tabular-nums">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                        {pack.image_url ? (
+                          <Image
+                            src={pack.image_url}
+                            alt={pack.name}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <Layers
+                              className="size-5 text-muted-foreground"
+                              aria-hidden
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-h3 line-clamp-2">{pack.name}</h3>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="shrink-0 tabular-nums whitespace-nowrap"
+                    >
                       {items.length} item{items.length > 1 ? "s" : ""}
                     </Badge>
                   </div>
@@ -72,6 +140,24 @@ export default async function PacksPage() {
                         {optionalCount} optionnel{optionalCount > 1 ? "s" : ""}
                       </Badge>
                     )}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t pt-3">
+                    <PackFormDialog
+                      products={products}
+                      pack={{
+                        id: pack.id,
+                        name: pack.name,
+                        description: pack.description ?? "",
+                        imageUrl: pack.image_url ?? "",
+                        items: items.map((i) => ({
+                          productId: i.product_id,
+                          isRequired: i.is_required,
+                          priceWebOverride: i.price_web_override,
+                          priceShopOverride: i.price_shop_override,
+                        })),
+                      }}
+                    />
+                    <DeletePackButton id={pack.id} name={pack.name} />
                   </div>
                 </CardContent>
               </Card>
