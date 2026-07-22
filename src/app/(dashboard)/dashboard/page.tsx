@@ -1,5 +1,6 @@
 import { MetricCard } from "@/features/dashboard/components/metric-card";
 import { TodayReservations } from "@/features/dashboard/components/today-reservations";
+import { UpcomingPreparations } from "@/features/dashboard/components/upcoming-preparations";
 import {
   getDashboardMetrics,
   getTodayReservations,
@@ -89,6 +90,11 @@ export default async function DashboardPage() {
       {/* Today's reservations */}
       <section aria-label="Réservations du jour">
         <TodayReservations reservations={todayReservations} />
+      </section>
+
+      {/* Upcoming preparations (story 8.3) */}
+      <section aria-label="À préparer sur les 7 prochains jours">
+        <UpcomingPreparations />
       </section>
     </div>
   );

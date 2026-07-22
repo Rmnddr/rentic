@@ -77,22 +77,7 @@ export async function getTodayReservations() {
   return data ?? [];
 }
 
-export async function getNext7DaysReservations() {
-  const supabase = await createClient();
-  const today = new Date().toISOString().split("T")[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000)
-    .toISOString()
-    .split("T")[0];
-
-  const { data } = await supabase
-    .from("reservations")
-    .select(
-      "id, customer_name, start_date, end_date, status, reservation_items(id, product_id, quantity)",
-    )
-    .gte("start_date", today)
-    .lte("start_date", nextWeek)
-    .eq("status", "confirmed")
-    .order("start_date", { ascending: true });
-
-  return data ?? [];
-}
+// NB : la préparation à 7 jours (story 8.3) vit dans
+// features/dashboard/components/upcoming-preparations.tsx, qui inclut les
+// attributs participants — l'ancienne query getNext7DaysReservations,
+// jamais consommée, a été supprimée.
