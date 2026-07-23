@@ -75,6 +75,9 @@ export default {
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
         hover: "var(--shadow-hover)",
+        organic: "var(--shadow-organic)",
+        "organic-hover": "var(--shadow-organic-hover)",
+        "organic-sm": "var(--shadow-organic-sm)",
       },
       fontSize: {
         display: ["2.25rem", { lineHeight: "1.2", fontWeight: "700" }],
