@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Star, ArrowRight, Mountain, Bike } from 'lucide-react';
+import { ArrowRight, Mountain } from 'lucide-react';
 
 export function Storefront() {
   const [hasPhotos, setHasPhotos] = useState(true);

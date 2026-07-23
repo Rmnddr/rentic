@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { motion } from 'motion/react';
-import { Check, ArrowRight, Store, Calendar, CreditCard, Laptop, Smartphone, BarChart3, Star, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, Store, Calendar, CreditCard, BarChart3 } from 'lucide-react';
 
 export function Landing() {
   return (
@@ -126,7 +126,7 @@ export function Landing() {
               <li className="flex items-center gap-3 text-foreground"><Check className="text-success w-5 h-5" /> Paiements sécurisés via Stripe</li>
               <li className="flex items-center gap-3 text-foreground"><Check className="text-success w-5 h-5" /> Support prioritaire</li>
             </ul>
-            <button className="w-full border-2 border-primary text-primary font-bold py-4 rounded-[16px] hover:bg-primary/5 transition-colors">Démarrer l'essai gratuit</button>
+            <button className="w-full border-2 border-primary text-primary font-bold py-4 rounded-[16px] hover:bg-primary/5 transition-colors">Démarrer l&apos;essai gratuit</button>
           </div>
 
           <div className="bg-primary text-primary-foreground rounded-[32px] p-10 shadow-organic relative">
@@ -134,7 +134,7 @@ export function Landing() {
               Le plus populaire
             </div>
             <h3 className="text-2xl font-bold">Annuel</h3>
-            <p className="text-primary-foreground/80 mt-2">Pour une activité à l'année.</p>
+            <p className="text-primary-foreground/80 mt-2">Pour une activité à l&apos;année.</p>
             <div className="my-8">
               <span className="text-5xl font-bold">790 €</span>
               <span className="text-primary-foreground/80"> / an</span>
@@ -144,7 +144,7 @@ export function Landing() {
               <li className="flex items-center gap-3"><Check className="text-accent w-5 h-5" /> Statistiques annuelles</li>
               <li className="flex items-center gap-3"><Check className="text-accent w-5 h-5" /> Formations vidéos incluses</li>
             </ul>
-            <button className="w-full bg-surface text-primary font-bold py-4 rounded-[16px] hover:scale-[1.02] transition-transform shadow-md">Démarrer l'essai gratuit</button>
+            <button className="w-full bg-surface text-primary font-bold py-4 rounded-[16px] hover:scale-[1.02] transition-transform shadow-md">Démarrer l&apos;essai gratuit</button>
           </div>
         </div>
       </section>

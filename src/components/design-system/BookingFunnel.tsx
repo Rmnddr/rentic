@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Calendar as CalendarIcon, Minus, Plus, ArrowRight, ShieldCheck, Check } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, ArrowRight, ShieldCheck, Check } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import { fr } from 'date-fns/locale';
 
@@ -246,7 +246,7 @@ export function BookingFunnel() {
                   <div className="flex items-start gap-3 mt-6">
                     <input type="checkbox" className="mt-1 rounded text-primary focus:ring-primary bg-muted border-none" defaultChecked />
                     <span className="text-xs text-muted-foreground leading-relaxed">
-                      J'accepte les conditions générales de location et de vente de la boutique Altitude Sports.
+                      J&apos;accepte les conditions générales de location et de vente de la boutique Altitude Sports.
                     </span>
                   </div>
                 </div>
