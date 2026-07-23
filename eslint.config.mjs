@@ -10,7 +10,17 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  { ignores: [".next/**", "node_modules/**"] },
+  {
+    ignores: [
+      "**/.next/**",
+      "**/node_modules/**",
+      // Worktree checkouts (each is a full copy of the repo + its own build output)
+      ".claude/**",
+      // Standalone projects that happen to live at the repo root
+      "rentic-design-system/**",
+      "Sans titre/**",
+    ],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {

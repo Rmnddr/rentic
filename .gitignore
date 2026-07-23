@@ -50,3 +50,7 @@ next-env.d.ts
 
 # supabase CLI
 supabase/.temp/
+
+# standalone projects living at the repo root (not part of this app)
+/rentic-design-system/
+/Sans titre/
