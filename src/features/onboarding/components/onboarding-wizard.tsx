@@ -83,7 +83,7 @@ export function OnboardingWizard({ currentStep, profile, shop }: Props) {
               key={s}
               className={cn(
                 "h-2 w-16 rounded-full transition-colors",
-                s <= step ? "bg-primary" : "bg-border",
+                s <= step ? "bg-primary" : "bg-muted",
               )}
             />
           ))}
@@ -210,7 +210,7 @@ export function OnboardingWizard({ currentStep, profile, shop }: Props) {
               <select
                 id="categoryType"
                 name="categoryType"
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                className="flex h-10 w-full rounded-lg border border-input bg-surface px-3.5 py-1 text-sm shadow-organic-sm focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 defaultValue="product"
               >
                 <option value="product">Produit</option>
