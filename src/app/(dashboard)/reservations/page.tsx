@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,6 +10,7 @@ import { CashPaymentDialog } from "@/features/payments/components/cash-payment-d
 import { CreateReservationDialog } from "@/features/reservations/components/create-reservation-dialog";
 import { MaterialView } from "@/features/reservations/components/material-view";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 import { CalendarDays, FileText } from "lucide-react";
 
 const STATUS_CONFIG: Record<
@@ -168,24 +169,31 @@ export default async function ReservationsPage({ searchParams }: Props) {
       </header>
 
       {/* Story 4.6 : bascule entre la vue par réservations et la vue matériel */}
-      <nav aria-label="Mode d'affichage" className="flex gap-1 rounded-lg bg-secondary p-1 w-fit">
+      <nav
+        aria-label="Mode d'affichage"
+        className="flex w-fit gap-1 rounded-full bg-muted p-1"
+      >
         <Link
           href="/reservations"
           aria-current={!materialView ? "page" : undefined}
-          className={buttonVariants({
-            variant: materialView ? "ghost" : "default",
-            size: "sm",
-          })}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm transition-all",
+            !materialView
+              ? "bg-surface font-semibold text-primary shadow-organic-sm"
+              : "font-medium text-muted-foreground hover:text-foreground",
+          )}
         >
           Réservations
         </Link>
         <Link
           href="/reservations?vue=materiel"
           aria-current={materialView ? "page" : undefined}
-          className={buttonVariants({
-            variant: materialView ? "default" : "ghost",
-            size: "sm",
-          })}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm transition-all",
+            materialView
+              ? "bg-surface font-semibold text-primary shadow-organic-sm"
+              : "font-medium text-muted-foreground hover:text-foreground",
+          )}
         >
           Matériel
         </Link>
@@ -195,26 +203,26 @@ export default async function ReservationsPage({ searchParams }: Props) {
         <MaterialView />
       ) : (
       <Tabs defaultValue="upcoming">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="upcoming" className="min-h-[44px]">
+        <TabsList>
+          <TabsTrigger value="upcoming">
             À venir
             <Badge variant="secondary" className="ml-1.5 tabular-nums">
               {upcoming.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="in_progress" className="min-h-[44px]">
+          <TabsTrigger value="in_progress">
             En cours
             <Badge variant="secondary" className="ml-1.5 tabular-nums">
               {inProgress.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="past" className="min-h-[44px]">
+          <TabsTrigger value="past">
             Passées
             <Badge variant="secondary" className="ml-1.5 tabular-nums">
               {past.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="cancelled" className="min-h-[44px]">
+          <TabsTrigger value="cancelled">
             Annulées
             <Badge variant="secondary" className="ml-1.5 tabular-nums">
               {cancelled.length}
