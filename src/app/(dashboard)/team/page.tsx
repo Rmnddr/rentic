@@ -59,7 +59,7 @@ export default async function TeamPage() {
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between rounded-lg bg-muted/40 p-3"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary">
@@ -99,7 +99,7 @@ export default async function TeamPage() {
               {invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between rounded-lg bg-muted/40 p-3"
                 >
                   <div>
                     <p className="font-medium">

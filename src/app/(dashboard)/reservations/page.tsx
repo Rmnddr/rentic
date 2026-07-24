@@ -86,7 +86,7 @@ export default async function ReservationsPage({ searchParams }: Props) {
           return (
             <div
               key={res.id}
-              className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-secondary/30"
+              className="flex items-center justify-between rounded-lg bg-muted/40 p-4 transition-colors hover:bg-secondary/30"
             >
               <Link
                 href={`/reservations/${res.id}`}

@@ -102,7 +102,7 @@ export async function UpcomingPreparations() {
               key={row.id}
               href={`/reservations/${row.id}`}
               aria-label={`Voir la réservation de ${row.customerName} du ${formatDateFr(row.startDate)}`}
-              className="flex items-start justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-start justify-between gap-3 rounded-lg bg-muted/40 p-3 transition-colors hover:bg-secondary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{row.customerName}</p>

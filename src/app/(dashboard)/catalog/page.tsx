@@ -87,7 +87,7 @@ export default async function CatalogPage() {
                       {categoryProducts.map((product) => (
                         <div
                           key={product.id}
-                          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-secondary/30"
+                          className="flex items-center gap-3 rounded-lg bg-muted/40 p-3 transition-colors hover:bg-secondary/30"
                         >
                           <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
                             {product.image_url ? (

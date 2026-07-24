@@ -251,7 +251,7 @@ export function PackFormDialog({
                   return (
                     <li
                       key={item.productId}
-                      className="space-y-2 rounded-lg border p-3"
+                      className="space-y-2 rounded-lg bg-muted/40 p-3"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">

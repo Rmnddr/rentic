@@ -65,7 +65,7 @@ export function TodayReservations({ reservations }: { reservations: Reservation[
           return (
             <div
               key={res.id}
-              className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-secondary/50"
+              className="flex items-center justify-between rounded-lg bg-muted/40 p-3 transition-colors hover:bg-secondary/50"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{res.customer_name}</p>
