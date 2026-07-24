@@ -86,7 +86,7 @@ export function StepRecap({
         Récapitulatif
       </h2>
 
-      <div className="mt-6 rounded-xl bg-card p-4 shadow-organic-sm">
+      <div className="mt-6 rounded-2xl bg-surface p-5 shadow-organic">
         <p className="text-body-sm text-muted-foreground">
           Du <strong className="text-foreground">{formatDateFr(startDate)}</strong>{" "}
           au <strong className="text-foreground">{formatDateFr(endDate)}</strong>
@@ -110,9 +110,11 @@ export function StepRecap({
             </li>
           ))}
         </ul>
-        <p className="mt-3 flex items-center justify-between border-t pt-3 font-semibold">
+        <p className="mt-3 flex items-center justify-between border-t border-muted pt-3 font-bold">
           <span>Total</span>
-          <span className="tabular-nums">{formatCurrency(total)}</span>
+          <span className="text-lg tabular-nums text-primary">
+            {formatCurrency(total)}
+          </span>
         </p>
         <p className="mt-1 text-caption text-muted-foreground">
           {catalog.onlinePayment

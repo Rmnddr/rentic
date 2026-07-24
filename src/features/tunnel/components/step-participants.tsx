@@ -66,9 +66,9 @@ export function StepParticipants({
           return (
             <div
               key={`${item.productId}-${item.packId ?? "solo"}`}
-              className="rounded-lg border bg-card p-4"
+              className="rounded-2xl bg-surface p-5 shadow-organic"
             >
-              <h3 className="font-medium">
+              <h3 className="font-bold text-foreground">
                 {item.productName}
                 {item.quantity > 1 && (
                   <span className="text-muted-foreground"> × {item.quantity}</span>
@@ -76,8 +76,8 @@ export function StepParticipants({
               </h3>
               <div className="mt-3 space-y-4">
                 {Array.from({ length: item.quantity }).map((_, participantIndex) => (
-                  <fieldset key={participantIndex} className="rounded-md border p-3">
-                    <legend className="px-1 text-body-sm text-muted-foreground">
+                  <fieldset key={participantIndex} className="rounded-xl bg-muted/40 p-4">
+                    <legend className="px-1 text-caption font-bold uppercase tracking-wider text-muted-foreground">
                       Participant {participantIndex + 1}
                     </legend>
                     <div className="grid gap-3 sm:grid-cols-2">

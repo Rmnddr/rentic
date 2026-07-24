@@ -66,7 +66,7 @@ export function StepPayment({
       )}
 
       {clientSecret && (
-        <div className="mt-6 rounded-lg border bg-card p-4">
+        <div className="mt-6 rounded-2xl bg-surface p-5 shadow-organic">
           <Elements
             stripe={stripePromise}
             options={{ clientSecret, locale: "fr" }}
