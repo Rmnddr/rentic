@@ -118,7 +118,7 @@ export default async function SubscriptionPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-lg border bg-card p-4 space-y-3">
+                <div className="rounded-xl bg-muted/40 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold">Saison</p>
@@ -130,7 +130,7 @@ export default async function SubscriptionPage() {
                   </div>
                   <SubscribeButton plan="season" label="Souscrire Saison" />
                 </div>
-                <div className="rounded-lg border bg-card p-4 space-y-3">
+                <div className="rounded-xl bg-muted/40 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold">Annuel</p>

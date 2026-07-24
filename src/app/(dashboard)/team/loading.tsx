@@ -11,7 +11,7 @@ export default function Loading() {
         <Skeleton className="h-9 w-36" />
       </header>
 
-      <div className="space-y-4 rounded-xl border p-6">
+      <div className="space-y-4 rounded-xl shadow-organic p-6">
         <Skeleton className="h-6 w-32" />
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (

@@ -34,7 +34,7 @@ export default async function ConfirmationPage({ params, searchParams }: Props) 
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md rounded-lg border bg-card p-8 text-center shadow-sm">
+      <div className="w-full max-w-md rounded-xl bg-card p-8 text-center shadow-organic">
         <CheckCircle2 className="mx-auto size-12 text-primary" aria-hidden />
         <h1 className="mt-4 text-h1">Réservation confirmée</h1>
         {shortRef && (

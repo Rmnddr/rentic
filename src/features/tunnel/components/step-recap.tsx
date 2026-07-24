@@ -86,7 +86,7 @@ export function StepRecap({
         Récapitulatif
       </h2>
 
-      <div className="mt-6 rounded-lg border bg-card p-4">
+      <div className="mt-6 rounded-xl bg-card p-4 shadow-organic-sm">
         <p className="text-body-sm text-muted-foreground">
           Du <strong className="text-foreground">{formatDateFr(startDate)}</strong>{" "}
           au <strong className="text-foreground">{formatDateFr(endDate)}</strong>
