@@ -127,7 +127,9 @@ function SidebarContent({ shopName, shopLogoUrl, userName, userRole, onNavigate 
         </div>
       </div>
 
-      <Separator className="mx-4 my-3 w-auto" />
+      <div className="px-4">
+        <Separator className="my-3" />
+      </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3" aria-label="Navigation principale">
