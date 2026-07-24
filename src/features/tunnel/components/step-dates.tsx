@@ -78,7 +78,7 @@ export function StepDates({
         sur toute la période vous sera proposé.
       </p>
 
-      <div className="mt-6 flex justify-center rounded-lg border bg-card p-4">
+      <div className="mt-6 flex justify-center rounded-2xl bg-surface p-6 shadow-organic">
         {mounted ? (
           <Calendar
             mode="range"

@@ -24,7 +24,7 @@ function ProductThumbnail({
   return (
     <span
       className={cn(
-        "relative block shrink-0 overflow-hidden rounded-md bg-secondary",
+        "relative block shrink-0 overflow-hidden rounded-xl bg-muted",
         className,
       )}
     >
@@ -33,12 +33,12 @@ function ProductThumbnail({
           src={imageUrl}
           alt={name}
           fill
-          sizes="56px"
+          sizes="64px"
           className="object-cover"
         />
       ) : (
         <span className="flex h-full items-center justify-center">
-          <Package className="size-5 text-muted-foreground" aria-hidden />
+          <Package className="size-6 text-muted-foreground/40" aria-hidden />
         </span>
       )}
     </span>
@@ -93,8 +93,10 @@ export function StepCatalog({
           if (products.length === 0) return null;
           return (
             <div key={cat.id}>
-              <h3 className="mb-3 text-h3">{cat.name}</h3>
-              <ul className="space-y-2">
+              <h3 className="mb-4 text-xl font-bold text-foreground">
+                {cat.name}
+              </h3>
+              <ul className="space-y-4">
                 {products.map((product) => {
                   const available = availability[product.id] ?? 0;
                   const inCart = items
@@ -104,18 +106,22 @@ export function StepCatalog({
                   return (
                     <li
                       key={product.id}
-                      className="flex items-center justify-between gap-4 rounded-lg border bg-card p-4"
+                      className="flex items-center justify-between gap-4 rounded-2xl bg-surface p-4 shadow-organic"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-4">
                         <ProductThumbnail
                           imageUrl={product.image_url}
                           name={product.name}
-                          className="size-14"
+                          className="size-16"
                         />
                         <div className="min-w-0">
-                          <p className="font-medium">{product.name}</p>
-                          <p className="text-body-sm text-muted-foreground">
-                            {formatCurrency(product.price_web)} ·{" "}
+                          <p className="font-bold text-foreground">
+                            {product.name}
+                          </p>
+                          <p className="mt-0.5 text-lg font-bold tabular-nums text-primary">
+                            {formatCurrency(product.price_web)}
+                          </p>
+                          <p className="text-caption text-muted-foreground">
                             {available > 0
                               ? `${available} disponible${available > 1 ? "s" : ""}`
                               : "Indisponible sur ces dates"}
@@ -143,8 +149,8 @@ export function StepCatalog({
         {/* Packs */}
         {catalog.packs.length > 0 && (
           <div>
-            <h3 className="mb-3 text-h3">Packs</h3>
-            <ul className="space-y-3">
+            <h3 className="mb-4 text-xl font-bold text-foreground">Packs</h3>
+            <ul className="space-y-4">
               {catalog.packs.map((pack) => (
                 <PackCard
                   key={pack.id}
@@ -159,9 +165,9 @@ export function StepCatalog({
       </div>
 
       {/* Panier */}
-      <div className="mt-8 rounded-lg border bg-card p-4">
-        <h3 className="flex items-center gap-2 text-h3">
-          <ShoppingCart className="size-5" aria-hidden />
+      <div className="mt-10 rounded-2xl bg-surface p-5 shadow-organic">
+        <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">
+          <ShoppingCart className="size-5 text-primary" aria-hidden />
           Votre panier
         </h3>
         {items.length === 0 ? (
@@ -235,9 +241,14 @@ export function StepCatalog({
           </ul>
         )}
         {items.length > 0 && (
-          <p className="mt-4 border-t pt-3 text-right font-semibold tabular-nums">
-            Total indicatif : {formatCurrency(cartTotal)}
-          </p>
+          <div className="mt-4 flex items-center justify-between border-t border-muted pt-4">
+            <span className="text-caption font-bold uppercase tracking-wider text-muted-foreground">
+              Total indicatif
+            </span>
+            <span className="text-2xl font-bold tabular-nums text-primary">
+              {formatCurrency(cartTotal)}
+            </span>
+          </div>
         )}
       </div>
 
@@ -316,49 +327,27 @@ function PackCard({
   }
 
   return (
-    <li className="rounded-lg border bg-card p-4">
+    <li className="rounded-2xl bg-surface p-5 shadow-organic">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <Badge variant="secondary">Pack</Badge>
-          <p className="mt-1 font-medium">{pack.name}</p>
+        <div className="min-w-0">
+          <Badge className="bg-accent text-accent-foreground uppercase tracking-wider">
+            Pack
+          </Badge>
+          <p className="mt-2 text-lg font-bold text-foreground">{pack.name}</p>
           {pack.description && (
             <p className="text-body-sm text-muted-foreground">{pack.description}</p>
           )}
-          <ul className="mt-2 space-y-1 text-body-sm text-muted-foreground">
-            {required.map((i) => (
-              <li key={i.product_id}>
-                • {productById.get(i.product_id)?.name ?? "Produit"}{" "}
-                <span className="tabular-nums">
-                  ({formatCurrency(priceOf(i.product_id, i.price_web_override))})
-                </span>
-              </li>
-            ))}
-            {optional.map((i) => {
-              const product = productById.get(i.product_id);
-              if (!product) return null;
-              const id = `pack-${pack.id}-opt-${i.product_id}`;
-              return (
-                <li key={i.product_id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={id}
-                    checked={selectedOptional.has(i.product_id)}
-                    onCheckedChange={() => toggleOptional(i.product_id)}
-                    disabled={(availability[i.product_id] ?? 0) <= 0}
-                  />
-                  <label htmlFor={id}>
-                    {product.name} (option,{" "}
-                    <span className="tabular-nums">
-                      {formatCurrency(priceOf(i.product_id, i.price_web_override))}
-                    </span>
-                    )
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+          <p className="mt-2 text-body-sm text-muted-foreground">
+            Inclus :{" "}
+            {required
+              .map((i) => productById.get(i.product_id)?.name ?? "Produit")
+              .join(", ")}
+          </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <p className="font-semibold tabular-nums">{formatCurrency(packPrice)}</p>
+          <p className="text-xl font-bold tabular-nums text-primary">
+            {formatCurrency(packPrice)}
+          </p>
           <Button
             variant="outline"
             size="sm"
@@ -376,6 +365,41 @@ function PackCard({
           )}
         </div>
       </div>
+
+      {optional.length > 0 && (
+        <div className="mt-4 rounded-xl bg-muted/50 p-4">
+          <p className="mb-3 text-caption font-bold uppercase tracking-wider text-muted-foreground">
+            Options recommandées
+          </p>
+          <ul className="space-y-3">
+            {optional.map((i) => {
+              const product = productById.get(i.product_id);
+              if (!product) return null;
+              const id = `pack-${pack.id}-opt-${i.product_id}`;
+              const disabled = (availability[i.product_id] ?? 0) <= 0;
+              return (
+                <li key={i.product_id} className="flex items-center gap-3">
+                  <Checkbox
+                    id={id}
+                    checked={selectedOptional.has(i.product_id)}
+                    onCheckedChange={() => toggleOptional(i.product_id)}
+                    disabled={disabled}
+                  />
+                  <label
+                    htmlFor={id}
+                    className="flex flex-1 items-center justify-between gap-2 text-body-sm font-medium text-foreground"
+                  >
+                    <span>{product.name}</span>
+                    <span className="tabular-nums text-muted-foreground">
+                      +{formatCurrency(priceOf(i.product_id, i.price_web_override))}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </li>
   );
 }
