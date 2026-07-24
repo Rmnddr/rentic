@@ -182,7 +182,7 @@ export function Sidebar(props: SidebarProps) {
     <>
       {/* Desktop sidebar — fixed */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-30 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex h-full flex-col rounded-r-2xl bg-sidebar shadow-lg">
+        <div className="flex h-full flex-col rounded-r-2xl bg-sidebar shadow-organic">
           <SidebarContent {...props} />
         </div>
       </aside>

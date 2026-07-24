@@ -31,14 +31,14 @@ export function MetricCard({
   accentColor = "primary",
 }: MetricCardProps) {
   return (
-    <Card className="transition-shadow duration-200 hover:shadow-hover">
+    <Card className="transition-all duration-200 hover:-translate-y-0.5 hover:shadow-organic-hover">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-body-sm text-muted-foreground">
           {title}
         </CardTitle>
         <div
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-lg",
+            "flex h-10 w-10 items-center justify-center rounded-xl",
             accentMap[accentColor],
           )}
         >
@@ -60,7 +60,7 @@ export function MetricCardSkeleton() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-9 w-9 rounded-lg" />
+        <Skeleton className="h-10 w-10 rounded-xl" />
       </CardHeader>
       <CardContent>
         <Skeleton className="h-8 w-20" />

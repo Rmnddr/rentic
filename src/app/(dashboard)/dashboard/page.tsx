@@ -60,28 +60,28 @@ export default async function DashboardPage() {
             title="Réservations du jour"
             value={metrics.reservationsToday.toString()}
             subtitle="en cours ou confirmées"
-            icon={<CalendarDays className="h-4 w-4" />}
+            icon={<CalendarDays className="h-5 w-5" />}
             accentColor="primary"
           />
           <MetricCard
             title="CA du mois"
             value={`${(metrics.monthlyRevenue / 100).toLocaleString("fr-FR", { minimumFractionDigits: 0 })} €`}
             subtitle="paiements encaissés"
-            icon={<ChartNoAxesCombined className="h-4 w-4" />}
+            icon={<ChartNoAxesCombined className="h-5 w-5" />}
             accentColor="success"
           />
           <MetricCard
             title="Taux d'occupation"
             value={`${metrics.occupancyRate} %`}
             subtitle="unités réservées / total"
-            icon={<TrendingUp className="h-4 w-4" />}
+            icon={<TrendingUp className="h-5 w-5" />}
             accentColor="accent"
           />
           <MetricCard
             title="À venir"
             value={metrics.upcomingReservations.toString()}
             subtitle="réservations confirmées"
-            icon={<Clock className="h-4 w-4" />}
+            icon={<Clock className="h-5 w-5" />}
             accentColor="warning"
           />
         </section>
